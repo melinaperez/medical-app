@@ -20,8 +20,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-  LineChart,
-  Line,
 } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -334,29 +332,15 @@ export default function DashboardPage() {
               {stats.scoreDistribution.length > 0 ? (
                 <div className="w-full h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={stats.scoreDistribution}>
+                    <BarChart data={stats.scoreDistribution}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="range" />
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="harms2af"
-                        stroke="#8884d8"
-                        name="HARMS₂-AF"
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="mtaiwan"
-                        stroke="#82ca9d"
-                        name="mTaiwan AF"
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
-                      />
-                    </LineChart>
+                      <Bar dataKey="harms2af" fill="#8884d8" name="HARMS₂-AF" />
+                      <Bar dataKey="mtaiwan" fill="#82ca9d" name="mTaiwan-AF" />
+                    </BarChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
