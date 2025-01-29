@@ -218,7 +218,7 @@ export default function DashboardPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.maleCount}</div>
+              <div className="text-2xl font-bold">{stats.maleCount || 0}</div>
             </CardContent>
           </Card>
 
@@ -228,7 +228,7 @@ export default function DashboardPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.femaleCount}</div>
+              <div className="text-2xl font-bold">{stats.femaleCount || 0}</div>
             </CardContent>
           </Card>
 
@@ -238,7 +238,7 @@ export default function DashboardPage() {
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.averageScore}</div>
+              <div className="text-2xl font-bold">{stats.averageScore || 0}</div>
             </CardContent>
           </Card>
         </div>
@@ -276,7 +276,11 @@ export default function DashboardPage() {
                         iconSize={10}
                         formatter={(value, entry) => (
                           <span className="text-sm">
-                            {value} ({(((entry.payload as any).value / stats.totalPatients) * 100).toFixed(0)}%)
+                            {value} (
+                            {stats.totalPatients > 0
+                              ? (((entry.payload as any).value / stats.totalPatients) * 100).toFixed(0)
+                              : 0}
+                            %)
                           </span>
                         )}
                       />
@@ -407,4 +411,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-
