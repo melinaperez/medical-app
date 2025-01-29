@@ -20,6 +20,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  LineChart,
+  Line,
 } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -28,14 +30,17 @@ interface PatientData {
   apellido: string
   genero: string
   edad: number
-  raza: string
-  colesterolTotal: number
-  colesterolHDL: number
   presionSistolica: number
-  tratamientoHipertension: string
-  diabetes: string
-  fumador: string
-  score: number
+  hipertensionArterial: string
+  tabaquismo: string
+  imc: string
+  apneaSueno: string
+  usoAlcohol: string
+  insuficienciaCardiaca: string
+  enfermedadCoronaria: string
+  enfermedadRenal: string
+  harms2afScore: number
+  mtaiwanScore: number
   createdAt: any
   doctorId: string
   doctorEmail: string
@@ -43,7 +48,8 @@ interface PatientData {
 
 interface ScoreDistribution {
   range: string
-  count: number
+  harms2af: number
+  mtaiwan: number
 }
 
 interface DashboardStats {
@@ -114,8 +120,6 @@ export default function DashboardPage() {
         let total = 0
         let male = 0
         let female = 0
-        let totalScore = 0
-        const scores: number[] = []
         const patients: PatientData[] = []
 
         querySnapshot.forEach((doc) => {
@@ -123,25 +127,25 @@ export default function DashboardPage() {
           total++
           if (data.genero === "M") male++
           if (data.genero === "F") female++
-          if (data.score) {
-            totalScore += data.score
-            scores.push(data.score)
-          }
           patients.push(data)
         })
 
         // Calculate score distribution
         const scoreRanges = [
-          { min: 0, max: 20, label: "0-20" },
-          { min: 21, max: 40, label: "21-40" },
-          { min: 41, max: 60, label: "41-60" },
-          { min: 61, max: 80, label: "61-80" },
-          { min: 81, max: 100, label: "81-100" },
+          { min: 0, max: 2, label: "0-2" },
+          { min: 3, max: 5, label: "3-5" },
+          { min: 6, max: 8, label: "6-8" },
+          { min: 9, max: 11, label: "9-11" },
+          { min: 12, max: 14, label: "12-14" },
         ]
 
         const distribution = scoreRanges.map((range) => ({
           range: range.label,
-          count: scores.filter((score) => score >= range.min && score <= range.max).length,
+          harms2af: patients.filter(
+            (patient) => patient.harms2afScore >= range.min && patient.harms2afScore <= range.max,
+          ).length,
+          mtaiwan: patients.filter((patient) => patient.mtaiwanScore >= range.min && patient.mtaiwanScore <= range.max)
+            .length,
         }))
 
         // Sort patients by date
@@ -151,7 +155,6 @@ export default function DashboardPage() {
           totalPatients: total,
           maleCount: male,
           femaleCount: female,
-          averageScore: total > 0 ? Math.round(totalScore / total) : 0,
           genderData: [
             { name: "Masculino", value: male },
             { name: "Femenino", value: female },
@@ -201,7 +204,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Pacientes</CardTitle>
@@ -234,11 +237,37 @@ export default function DashboardPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Score Promedio</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Riesgo calculado HARMS<sub>2</sub>
+              </CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.averageScore || 0}</div>
+              <div className="text-2xl font-bold">
+                {stats.allPatients.length > 0
+                  ? Math.round(
+                      stats.allPatients.reduce((sum, patient) => sum + patient.harms2afScore, 0) /
+                        stats.allPatients.length,
+                    )
+                  : 0}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Riesgo calculado mTaiwan</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stats.allPatients.length > 0
+                  ? Math.round(
+                      stats.allPatients.reduce((sum, patient) => sum + patient.mtaiwanScore, 0) /
+                        stats.allPatients.length,
+                    )
+                  : 0}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -295,19 +324,35 @@ export default function DashboardPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Distribución de Scores</CardTitle>
+              <CardTitle>Distribución de Riesgos Calculados</CardTitle>
             </CardHeader>
             <CardContent className="flex justify-center">
               {stats.scoreDistribution.length > 0 ? (
                 <div className="w-full h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={stats.scoreDistribution}>
+                    <LineChart data={stats.scoreDistribution}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="range" />
                       <YAxis />
                       <Tooltip />
-                      <Bar dataKey="count" fill="#8884d8" />
-                    </BarChart>
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="harms2af"
+                        stroke="#8884d8"
+                        name="HARMS₂-AF"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="mtaiwan"
+                        stroke="#82ca9d"
+                        name="mTaiwan AF"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                      />
+                    </LineChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
@@ -334,11 +379,11 @@ export default function DashboardPage() {
                         <th className="h-12 px-4 text-left align-middle font-medium">Paciente</th>
                         <th className="h-12 px-4 text-left align-middle font-medium">Género</th>
                         <th className="h-12 px-4 text-left align-middle font-medium">Edad</th>
-                        <th className="h-12 px-4 text-left align-middle font-medium">Raza</th>
-                        <th className="h-12 px-4 text-left align-middle font-medium">Col. Total</th>
-                        <th className="h-12 px-4 text-left align-middle font-medium">Col. HDL</th>
                         <th className="h-12 px-4 text-left align-middle font-medium">P. Sistólica</th>
-                        <th className="h-12 px-4 text-left align-middle font-medium">Score</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium">
+                          HARMS<sub>2</sub>-AF
+                        </th>
+                        <th className="h-12 px-4 text-left align-middle font-medium">mTaiwan-AF</th>
                         {isAdmin && <th className="h-12 px-4 text-left align-middle font-medium">Médico</th>}
                       </tr>
                     </thead>
@@ -348,11 +393,9 @@ export default function DashboardPage() {
                           <td className="p-4">{getDisplayName(patient)}</td>
                           <td className="p-4 capitalize">{patient.genero}</td>
                           <td className="p-4">{patient.edad}</td>
-                          <td className="p-4">{patient.raza}</td>
-                          <td className="p-4">{patient.colesterolTotal}</td>
-                          <td className="p-4">{patient.colesterolHDL}</td>
                           <td className="p-4">{patient.presionSistolica}</td>
-                          <td className="p-4">{patient.score}</td>
+                          <td className="p-4">{patient.harms2afScore}</td>
+                          <td className="p-4">{patient.mtaiwanScore}</td>
                           {isAdmin && <td className="p-4">{patient.doctorEmail}</td>}
                         </tr>
                       ))}
@@ -411,3 +454,4 @@ export default function DashboardPage() {
     </div>
   )
 }
+

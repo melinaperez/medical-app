@@ -1,78 +1,117 @@
-import { SERVER_PROPS_GET_INIT_PROPS_CONFLICT } from "next/dist/lib/constants"
 import { NextResponse } from "next/server"
 
+interface ScoreResult {
+  harms2afScore: number
+  mtaiwanScore: number
+}
+
 export async function POST(request: Request) {
-  const data = await request.json()
+  try {
+    const data = await request.json()
 
-  // Extract values
-  const { edad, genero, colesterolTotal, colesterolHDL, presionSistolica, tratamientoHipertension, diabetes, fumador, raza } =
-    data
+    // Extract values
+    const {
+      edad,
+      genero,
+      presionSistolica,
+      hipertensionArterial,
+      tabaquismo,
+      imc,
+      apneaSueno,
+      usoAlcohol,
+      insuficienciaCardiaca,
+      enfermedadCoronaria,
+      enfermedadRenal,
+    } = data
 
-  // Calculate base score
-  let score = 0
+    // Calcular HARMS2-AF Score
+    let harms2afScore = 0
 
-  //Calculo Major
-  let major = 0
-  if (colesterolTotal >= 240) major+=1
-  if (presionSistolica >= 160) major+=1
-  if (tratamientoHipertension == 'S') major += 1
-  if (fumador == 'S') major += 1
-  if (diabetes == 'S') major +=1
-
-
-  //Calculo Elevated
-  let elevated = 0
-  if (colesterolTotal >= 200 && colesterolTotal < 240) elevated+=1
-  if (presionSistolica >=140 && presionSistolica < 160 && tratamientoHipertension == 'N') elevated+=1
-
-  //Calculo Not Optimal
-  let notOptimal = 0
-  if (colesterolTotal >= 180 && colesterolTotal < 200) notOptimal+=1
-  if (presionSistolica >=120 && presionSistolica < 140 && tratamientoHipertension == 'N') notOptimal+=1
-
-  //Calculo All Optimal
-  let allOptimal = 0
-  if (colesterolTotal < 180) allOptimal+=1
-  if (presionSistolica <120 && tratamientoHipertension == 'N') allOptimal+=1
-
-  let major2 = 0
-  let major1 = 0
-  let elevatedFinal = 0
-  let notOptimalFinal = 0
-  let allOptimalFinal = 0
-
-  //Calculo los multiplicadores
-  if (major >= 2) major2 = 1
-  else if (major == 1) major1 = 1    
-  else {
-    if (elevated >= 1) elevatedFinal = 1
-    else {
-      if (notOptimal >=1) notOptimalFinal = 1
-      else {
-        if (allOptimal == 2) allOptimalFinal = 1
-      }
+    // Hipertensión Arterial (4 puntos)
+    if (hipertensionArterial === "S") {
+      harms2afScore += 4
     }
+
+    // Edad
+    const edadNum = Number(edad)
+    if (edadNum >= 65) {
+      harms2afScore += 2
+    } else if (edadNum >= 60) {
+      harms2afScore += 1
+    }
+
+    // IMC ≥30
+    if (imc === "S") {
+      harms2afScore += 1
+    }
+
+    // Género Masculino
+    if (genero === "M") {
+      harms2afScore += 1
+    }
+
+    // Apnea del Sueño
+    if (apneaSueno === "S") {
+      harms2afScore += 1
+    }
+
+    // Tabaquismo
+    if (tabaquismo === "S") {
+      harms2afScore += 1
+    }
+
+    // Uso de Alcohol
+    if (usoAlcohol === "alto") {
+      harms2afScore += 2
+    } else if (usoAlcohol === "moderado") {
+      harms2afScore += 1
+    }
+
+
+    // Calcular mTaiwan AF Score
+    let mtaiwanScore = 0
+
+    // Edad
+    if (edadNum >= 80) mtaiwanScore += 8
+    else if (edadNum >= 75) mtaiwanScore += 5
+    else if (edadNum >= 70) mtaiwanScore += 4
+    else if (edadNum >= 65) mtaiwanScore += 3
+    else if (edadNum >= 60) mtaiwanScore += 2
+    else if (edadNum >= 55) mtaiwanScore += 1
+    else if (edadNum >= 50) mtaiwanScore += 0
+    else if (edadNum >= 45) mtaiwanScore -= 1
+    else if (edadNum >= 40) mtaiwanScore -= 2
+
+
+    // Género Masculino
+    if (genero === "M") {
+      mtaiwanScore += 1
+    }
+
+    // Hipertensión
+    if (hipertensionArterial === "S") {
+      mtaiwanScore += 1
+    }
+
+    // Insuficiencia Cardíaca
+    if (insuficienciaCardiaca === "S") {
+      mtaiwanScore += 2
+    }
+
+    // Enfermedad Coronaria
+    if (enfermedadCoronaria === "S") {
+      mtaiwanScore += 1
+    }
+
+    // Enfermedad Renal
+    if (enfermedadRenal === "S") {
+      mtaiwanScore += 1
+    }
+
+
+    return NextResponse.json({ harms2afScore, mtaiwanScore })
+  } catch (error) {
+    return NextResponse.json({ error: "Error al calcular los scores" }, { status: 500 })
   }
-
-  //Constantes femeninas
-  const major2F = 50
-  const major1F = 39
-  const elevatedF = 39
-  const notOptimalF = 27
-  const allOptimalF = 8
-
-  //Constantes masculinas
-  const major2M = 69
-  const major1M = 50
-  const elevatedM = 46
-  const notOptimalM = 36
-  const allOptimalM = 5
-
-  if (genero == 'F')
-    score = (major2 * major2F) + (major1 * major1F) + (elevatedFinal * elevatedF) + (notOptimalFinal * notOptimalF) + (allOptimalFinal * allOptimalF)
-  if (genero == 'M')
-    score = (major2 * major2M) + (major1 * major1M) + (elevatedFinal * elevatedM) + (notOptimalFinal * notOptimalM) + (allOptimalFinal * allOptimalM)
-
-  return NextResponse.json({ score })
 }
 

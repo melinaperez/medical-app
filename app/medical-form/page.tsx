@@ -12,19 +12,24 @@ import { Label } from "@/components/ui/label"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/components/ui/use-toast"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface PatientData {
   nombre: string
   apellido: string
   genero: string
   edad: string
-  raza: string
-  colesterolTotal: string
-  colesterolHDL: string
   presionSistolica: string
-  tratamientoHipertension: string
-  diabetes: string
-  fumador: string
+  hipertensionArterial: string
+  tabaquismo: string
+  imc: string
+  apneaSueno: string
+  usoAlcohol: string
+  insuficienciaCardiaca: string
+  enfermedadCoronaria: string
+  enfermedadRenal: string
+  harms2afScore?: number
+  mtaiwanScore?: number
 }
 
 const initialFormData: PatientData = {
@@ -32,14 +37,22 @@ const initialFormData: PatientData = {
   apellido: "",
   genero: "",
   edad: "",
-  raza: "",
-  colesterolTotal: "",
-  colesterolHDL: "",
   presionSistolica: "",
-  tratamientoHipertension: "",
-  diabetes: "",
-  fumador: "",
+  hipertensionArterial: "",
+  tabaquismo: "",
+  imc: "",
+  apneaSueno: "",
+  usoAlcohol: "",
+  insuficienciaCardiaca: "",
+  enfermedadCoronaria: "",
+  enfermedadRenal: "",
 }
+
+const alcoholOptions = [
+  { value: "ninguna", label: "Ninguna medida" },
+  { value: "moderado", label: "7-14 medidas estándar/semana" },
+  { value: "alto", label: ">=15 medidas estándar/semana" },
+]
 
 export default function MedicalFormPage() {
   const { user } = useAuth()
@@ -49,6 +62,7 @@ export default function MedicalFormPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState<PatientData>(initialFormData)
+  const [scores, setScores] = useState<{ harms2afScore: number; mtaiwanScore: number } | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -66,24 +80,17 @@ export default function MedicalFormPage() {
     }))
   }
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
-
-  const handleSwitchChange = (name: string, checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: checked ? "S" : "N",
-    }))
-  }
-
   const handleToggleChange = (name: string, value: string | undefined) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value || "",
+    }))
+  }
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
     }))
   }
 
@@ -97,8 +104,6 @@ export default function MedicalFormPage() {
         body: JSON.stringify({
           ...data,
           edad: Number.parseInt(data.edad),
-          colesterolTotal: Number.parseInt(data.colesterolTotal),
-          colesterolHDL: Number.parseInt(data.colesterolHDL),
           presionSistolica: Number.parseInt(data.presionSistolica),
         }),
       })
@@ -108,7 +113,7 @@ export default function MedicalFormPage() {
       }
 
       const result = await response.json()
-      return result.score
+      return result
     } catch (error) {
       console.error("Error calculating score:", error)
       throw error
@@ -134,38 +139,44 @@ export default function MedicalFormPage() {
         throw new Error(`Los siguientes campos son requeridos: ${emptyFields.join(", ")}`)
       }
 
-      // Calculate score
-      const calculatedScore = await calculateScore(formData)
-      setScore(calculatedScore)
+      // Calculate scores
+      const calculatedScores = await calculateScore(formData)
+      setScores(calculatedScores)
 
       // Prepare data for Firestore
       const patientData = {
         ...formData,
         edad: Number.parseInt(formData.edad),
-        colesterolTotal: Number.parseInt(formData.colesterolTotal),
-        colesterolHDL: Number.parseInt(formData.colesterolHDL),
         presionSistolica: Number.parseInt(formData.presionSistolica),
-        score: calculatedScore,
+        harms2afScore: calculatedScores.harms2afScore,
+        mtaiwanScore: calculatedScores.mtaiwanScore,
         doctorId: user.uid,
         doctorEmail: user.email,
         createdAt: serverTimestamp(),
       }
 
+
       // Save to Firebase
       const patientsRef = collection(db, "patients")
       const docRef = await addDoc(patientsRef, patientData)
 
+
       toast({
         title: "Datos guardados",
-        description: "Los datos del paciente se han guardado correctamente.",
+        description:
+          "Los datos del paciente se han guardado correctamente. Será redirigido al dashboard en 5 segundos.",
+        duration: 3000, // Add this line to make the toast last 5 seconds
       })
 
       // Reset form
-      setFormData(initialFormData)
-      setScore(null)
 
-      // Redirect to dashboard
-      router.push("/dashboard")
+      setTimeout(() => {
+        router.push("/dashboard")
+        setFormData(initialFormData)
+        setScores(null)
+      }, 3000) // 5 seconds delay
+
+      
     } catch (error: any) {
       console.error("Detailed error:", {
         error,
@@ -248,49 +259,6 @@ export default function MedicalFormPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="block mb-2">Raza</Label>
-                <ToggleGroup
-                  type="single"
-                  value={formData.raza}
-                  onValueChange={(value: string | undefined) => value && handleToggleChange("raza", value)}
-                  className="w-full"
-                >
-                  <ToggleGroupItem value="AA" className="flex-1" aria-label="AA">
-                    AA
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="WH" className="flex-1" aria-label="WH">
-                    WH
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="colesterolTotal">Colesterol Total (mg/dL)</Label>
-                <Input
-                  id="colesterolTotal"
-                  name="colesterolTotal"
-                  type="number"
-                  min="0"
-                  value={formData.colesterolTotal}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="colesterolHDL">Colesterol HDL (mg/dL)</Label>
-                <Input
-                  id="colesterolHDL"
-                  name="colesterolHDL"
-                  type="number"
-                  min="0"
-                  value={formData.colesterolHDL}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="presionSistolica">Presión Sistólica (mm Hg)</Label>
                 <Input
                   id="presionSistolica"
@@ -304,14 +272,14 @@ export default function MedicalFormPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label className="block mb-2">Tratamiento por Hipertensión</Label>
+                <Label className="block mb-2">Hipertensión Arterial</Label>
                 <ToggleGroup
                   type="single"
-                  value={formData.tratamientoHipertension}
+                  value={formData.hipertensionArterial}
                   onValueChange={(value: string | undefined) =>
-                    value && handleToggleChange("tratamientoHipertension", value)
+                    value && handleToggleChange("hipertensionArterial", value)
                   }
                   className="w-full"
                 >
@@ -325,11 +293,30 @@ export default function MedicalFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="block mb-2">Diabetes</Label>
+                <Label className="block mb-2">Tabaquismo</Label>
                 <ToggleGroup
                   type="single"
-                  value={formData.diabetes}
-                  onValueChange={(value: string | undefined) => value && handleToggleChange("diabetes", value)}
+                  value={formData.tabaquismo}
+                  onValueChange={(value: string | undefined) => value && handleToggleChange("tabaquismo", value)}
+                  className="w-full"
+                >
+                  <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                    Sí
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                    No
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="block mb-2">IMC ≥ 30kg/m²</Label>
+                <ToggleGroup
+                  type="single"
+                  value={formData.imc}
+                  onValueChange={(value: string | undefined) => value && handleToggleChange("imc", value)}
                   className="w-full"
                 >
                   <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
@@ -342,11 +329,84 @@ export default function MedicalFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="block mb-2">Fumador</Label>
+                <Label className="block mb-2">Apnea del Sueño</Label>
                 <ToggleGroup
                   type="single"
-                  value={formData.fumador}
-                  onValueChange={(value: string | undefined) => value && handleToggleChange("fumador", value)}
+                  value={formData.apneaSueno}
+                  onValueChange={(value: string | undefined) => value && handleToggleChange("apneaSueno", value)}
+                  className="w-full"
+                >
+                  <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                    Sí
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                    No
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="block mb-2">Uso de Alcohol</Label>
+              <Select value={formData.usoAlcohol} onValueChange={(value) => handleSelectChange("usoAlcohol", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccione una opción" />
+                </SelectTrigger>
+                <SelectContent>
+                  {alcoholOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label className="block mb-2">Insuficiencia Cardíaca</Label>
+                <ToggleGroup
+                  type="single"
+                  value={formData.insuficienciaCardiaca}
+                  onValueChange={(value: string | undefined) =>
+                    value && handleToggleChange("insuficienciaCardiaca", value)
+                  }
+                  className="w-full"
+                >
+                  <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                    Sí
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                    No
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="block mb-2">Enfermedad Coronaria</Label>
+                <ToggleGroup
+                  type="single"
+                  value={formData.enfermedadCoronaria}
+                  onValueChange={(value: string | undefined) =>
+                    value && handleToggleChange("enfermedadCoronaria", value)
+                  }
+                  className="w-full"
+                >
+                  <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                    Sí
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                    No
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="block mb-2">Enfermedad Renal Crónica</Label>
+                <ToggleGroup
+                  type="single"
+                  value={formData.enfermedadRenal}
+                  onValueChange={(value: string | undefined) => value && handleToggleChange("enfermedadRenal", value)}
                   className="w-full"
                 >
                   <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
@@ -364,10 +424,18 @@ export default function MedicalFormPage() {
             </Button>
           </form>
 
-          {score !== null && (
-            <div className="mt-6 p-4 bg-primary/10 rounded-lg">
-              <h3 className="font-semibold mb-2">Score calculado:</h3>
-              <p className="text-2xl font-bold">{score}</p>
+          {scores !== null && (
+            <div className="mt-6 space-y-4">
+              <div className="p-4 bg-primary/10 rounded-lg">
+                <h3 className="font-semibold mb-2">
+                  Riesgo calculado HARMS<sub>2</sub>-AF:
+                </h3>
+                <p className="text-2xl font-bold">{scores.harms2afScore}</p>
+              </div>
+              <div className="p-4 bg-primary/10 rounded-lg">
+                <h3 className="font-semibold mb-2">Riesgo calculado mTaiwan-AF:</h3>
+                <p className="text-2xl font-bold">{scores.mtaiwanScore}</p>
+              </div>
             </div>
           )}
         </CardContent>
@@ -375,3 +443,4 @@ export default function MedicalFormPage() {
     </div>
   )
 }
+
