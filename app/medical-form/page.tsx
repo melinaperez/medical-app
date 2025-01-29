@@ -432,14 +432,14 @@ export default function MedicalFormPage() {
                   </ToggleGroupItem>
                 </ToggleGroup>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <Label className="block mb-2">Uso de alcohol</Label>
                 <Select
                   value={formData.usoAlcohol}
                   onValueChange={(value) => handleSelectChange("usoAlcohol", value)}
                   disabled={isSubmitted}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="Seleccione una opción" />
                   </SelectTrigger>
                   <SelectContent>
@@ -454,7 +454,7 @@ export default function MedicalFormPage() {
             </div>
 
             <div className="grid grid-cols-3 gap-6">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="block mb-2">Insuficiencia cardíaca</Label>
                 <ToggleGroup
                   type="single"
@@ -474,7 +474,7 @@ export default function MedicalFormPage() {
                 </ToggleGroup>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="block mb-2">Enfermedad coronaria</Label>
                 <ToggleGroup
                   type="single"
@@ -494,7 +494,7 @@ export default function MedicalFormPage() {
                 </ToggleGroup>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="block mb-2">Enfermedad renal crónica</Label>
                 <ToggleGroup
                   type="single"
@@ -592,6 +592,9 @@ export default function MedicalFormPage() {
                 <h3 className="font-semibold mb-2">Riesgo calculado mTaiwan-AF:</h3>
                 <p className="text-2xl font-bold">{scores.mtaiwanScore}</p>
               </div>
+              <Button variant="outline" onClick={() => router.push("/dashboard")} className="w-full">
+                Volver al Dashboard
+              </Button>
             </div>
           )}
         </CardContent>
