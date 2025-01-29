@@ -19,15 +19,19 @@ interface PatientData {
   apellido: string
   genero: string
   edad: string
+  colesterolTotal: string
   presionSistolica: string
   hipertensionArterial: string
-  tabaquismo: string
   imc: string
+  tabaquismo: string
   apneaSueno: string
   usoAlcohol: string
   insuficienciaCardiaca: string
   enfermedadCoronaria: string
   enfermedadRenal: string
+  enfermedadCerebrovascular: string // New field
+  enfermedadVascular: string // New field
+  diabetesMellitus: string // New field
   harms2afScore?: number
   mtaiwanScore?: number
 }
@@ -37,15 +41,39 @@ const initialFormData: PatientData = {
   apellido: "",
   genero: "",
   edad: "",
+  colesterolTotal: "",
   presionSistolica: "",
   hipertensionArterial: "",
-  tabaquismo: "",
   imc: "",
+  tabaquismo: "",
   apneaSueno: "",
   usoAlcohol: "",
   insuficienciaCardiaca: "",
   enfermedadCoronaria: "",
   enfermedadRenal: "",
+  enfermedadCerebrovascular: "", // New field
+  enfermedadVascular: "", // New field
+  diabetesMellitus: "", // New field
+}
+
+const fieldLabels: Record<string, string> = {
+  nombre: "Nombre",
+  apellido: "Apellido",
+  genero: "Género",
+  edad: "Edad",
+  colesterolTotal: "Colesterol total",
+  presionSistolica: "Presión Sistólica",
+  hipertensionArterial: "Hipertensión Arterial",
+  tabaquismo: "Tabaquismo",
+  imc: "IMC ≥ 30kg/m²",
+  apneaSueno: "Apnea del sueño",
+  usoAlcohol: "Uso de alcohol",
+  insuficienciaCardiaca: "Insuficiencia cardíaca",
+  enfermedadCoronaria: "Enfermedad coronaria",
+  enfermedadRenal: "Enfermedad renal crónica",
+  enfermedadCerebrovascular: "Enfermedad cerebrovascular", // New field
+  enfermedadVascular: "Enf. vascular periférica", // New field
+  diabetesMellitus: "Diabetes mellitus", // New field
 }
 
 const alcoholOptions = [
@@ -54,25 +82,41 @@ const alcoholOptions = [
   { value: "alto", label: ">=15 medidas estándar/semana" },
 ]
 
+const initialScore = null
+const initialLoading = false
+const initialError = null
+const initialScores = null
+const initialIsSubmitted = false
+
 export default function MedicalFormPage() {
   const { user } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
-  const [score, setScore] = useState<number | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [score, setScore] = useState<number | null>(initialScore)
+  const [loading, setLoading] = useState(initialLoading)
+  const [error, setError] = useState<string | null>(initialError)
   const [formData, setFormData] = useState<PatientData>(initialFormData)
-  const [scores, setScores] = useState<{ harms2afScore: number; mtaiwanScore: number } | null>(null)
+  const [scores, setScores] = useState<{ harms2afScore: number; mtaiwanScore: number } | null>(initialScores)
+  const [isSubmitted, setIsSubmitted] = useState(initialIsSubmitted)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (!user) {
       router.push("/login")
     }
+    setIsLoading(false)
   }, [user, router])
 
-  if (!user) return null
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-lg">Cargando...</p>
+      </div>
+    )
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isSubmitted) return
     const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
@@ -81,6 +125,7 @@ export default function MedicalFormPage() {
   }
 
   const handleToggleChange = (name: string, value: string | undefined) => {
+    if (isSubmitted) return
     setFormData((prev) => ({
       ...prev,
       [name]: value || "",
@@ -88,10 +133,18 @@ export default function MedicalFormPage() {
   }
 
   const handleSelectChange = (name: string, value: string) => {
+    if (isSubmitted) return
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }))
+  }
+
+  const handleNewPatient = () => {
+    setFormData(initialFormData)
+    setScores(null)
+    setIsSubmitted(false)
+    setError(null)
   }
 
   const calculateScore = async (data: PatientData) => {
@@ -105,6 +158,7 @@ export default function MedicalFormPage() {
           ...data,
           edad: Number.parseInt(data.edad),
           presionSistolica: Number.parseInt(data.presionSistolica),
+          colesterolTotal: Number.parseInt(data.colesterolTotal), //Added colesterolTotal
         }),
       })
 
@@ -133,7 +187,7 @@ export default function MedicalFormPage() {
       // Validate fields
       const emptyFields = Object.entries(formData)
         .filter(([_, value]) => !value)
-        .map(([key]) => key)
+        .map(([key]) => fieldLabels[key] || key)
 
       if (emptyFields.length > 0) {
         throw new Error(`Los siguientes campos son requeridos: ${emptyFields.join(", ")}`)
@@ -148,6 +202,7 @@ export default function MedicalFormPage() {
         ...formData,
         edad: Number.parseInt(formData.edad),
         presionSistolica: Number.parseInt(formData.presionSistolica),
+        colesterolTotal: Number.parseInt(formData.colesterolTotal), //Added colesterolTotal
         harms2afScore: calculatedScores.harms2afScore,
         mtaiwanScore: calculatedScores.mtaiwanScore,
         doctorId: user.uid,
@@ -155,34 +210,21 @@ export default function MedicalFormPage() {
         createdAt: serverTimestamp(),
       }
 
-
       // Save to Firebase
       const patientsRef = collection(db, "patients")
       const docRef = await addDoc(patientsRef, patientData)
 
-
       toast({
         title: "Datos guardados",
-        description:
-          "Los datos del paciente se han guardado correctamente. Será redirigido al dashboard en 5 segundos.",
-        duration: 3000, // Add this line to make the toast last 5 seconds
+        description: "Los datos del paciente se han guardado correctamente.",
       })
 
-      // Reset form
-
-      setTimeout(() => {
-        router.push("/dashboard")
-        setFormData(initialFormData)
-        setScores(null)
-      }, 3000) // 5 seconds delay
-
-      
+      setIsSubmitted(true)
     } catch (error: any) {
       console.error("Detailed error:", {
-        error,
-        message: error.message,
-        code: error.code,
-        stack: error.stack,
+        message: error?.message || "Unknown error",
+        code: error?.code,
+        stack: error?.stack,
       })
 
       setError(error.message || "Error al guardar los datos. Por favor, intente nuevamente.")
@@ -203,11 +245,14 @@ export default function MedicalFormPage() {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>Formulario Médico</CardTitle>
-            <p className="text-sm text-muted-foreground mt-2">Conectado como: {user.email}</p>
+            <p className="text-sm text-muted-foreground mt-2">Conectado como: {user?.email}</p>
           </div>
-          <Button variant="outline" onClick={() => router.push("/dashboard")}>
-            Volver al Dashboard
-          </Button>
+          <div className="flex gap-2">
+            {isSubmitted && <Button onClick={handleNewPatient}>Nuevo Paciente</Button>}
+            <Button variant="outline" onClick={() => router.push("/dashboard")}>
+              Volver al Dashboard
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {error && (
@@ -216,15 +261,37 @@ export default function MedicalFormPage() {
             </Alert>
           )}
 
+          {isSubmitted && (
+            <Alert className="mb-6">
+              <AlertDescription>
+                Paciente guardado exitosamente. Puede crear un nuevo paciente o volver al dashboard.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre</Label>
-                <Input id="nombre" name="nombre" value={formData.nombre} onChange={handleInputChange} required />
+                <Input
+                  id="nombre"
+                  name="nombre"
+                  value={formData.nombre}
+                  onChange={handleInputChange}
+                  required
+                  disabled={isSubmitted}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="apellido">Apellido</Label>
-                <Input id="apellido" name="apellido" value={formData.apellido} onChange={handleInputChange} required />
+                <Input
+                  id="apellido"
+                  name="apellido"
+                  value={formData.apellido}
+                  onChange={handleInputChange}
+                  required
+                  disabled={isSubmitted}
+                />
               </div>
             </div>
 
@@ -236,6 +303,7 @@ export default function MedicalFormPage() {
                   value={formData.genero}
                   onValueChange={(value: string | undefined) => value && handleToggleChange("genero", value)}
                   className="w-full"
+                  disabled={isSubmitted}
                 >
                   <ToggleGroupItem value="M" className="flex-1" aria-label="Masculino">
                     M
@@ -256,8 +324,25 @@ export default function MedicalFormPage() {
                   value={formData.edad}
                   onChange={handleInputChange}
                   required
+                  disabled={isSubmitted}
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="colesterolTotal">Colesterol total (mg/dL)</Label>
+                <Input
+                  id="colesterolTotal"
+                  name="colesterolTotal"
+                  type="number"
+                  min="0"
+                  value={formData.colesterolTotal}
+                  onChange={handleInputChange}
+                  required
+                  disabled={isSubmitted}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="presionSistolica">Presión Sistólica (mm Hg)</Label>
                 <Input
@@ -268,11 +353,9 @@ export default function MedicalFormPage() {
                   value={formData.presionSistolica}
                   onChange={handleInputChange}
                   required
+                  disabled={isSubmitted}
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label className="block mb-2">Hipertensión Arterial</Label>
                 <ToggleGroup
@@ -282,23 +365,7 @@ export default function MedicalFormPage() {
                     value && handleToggleChange("hipertensionArterial", value)
                   }
                   className="w-full"
-                >
-                  <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
-                    Sí
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="N" className="flex-1" aria-label="No">
-                    No
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="block mb-2">Tabaquismo</Label>
-                <ToggleGroup
-                  type="single"
-                  value={formData.tabaquismo}
-                  onValueChange={(value: string | undefined) => value && handleToggleChange("tabaquismo", value)}
-                  className="w-full"
+                  disabled={isSubmitted}
                 >
                   <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
                     Sí
@@ -318,6 +385,7 @@ export default function MedicalFormPage() {
                   value={formData.imc}
                   onValueChange={(value: string | undefined) => value && handleToggleChange("imc", value)}
                   className="w-full"
+                  disabled={isSubmitted}
                 >
                   <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
                     Sí
@@ -327,14 +395,34 @@ export default function MedicalFormPage() {
                   </ToggleGroupItem>
                 </ToggleGroup>
               </div>
-
               <div className="space-y-2">
-                <Label className="block mb-2">Apnea del Sueño</Label>
+                <Label className="block mb-2">Tabaquismo</Label>
+                <ToggleGroup
+                  type="single"
+                  value={formData.tabaquismo}
+                  onValueChange={(value: string | undefined) => value && handleToggleChange("tabaquismo", value)}
+                  className="w-full"
+                  disabled={isSubmitted}
+                >
+                  <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                    Sí
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                    No
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="block mb-2">Apnea del sueño</Label>
                 <ToggleGroup
                   type="single"
                   value={formData.apneaSueno}
                   onValueChange={(value: string | undefined) => value && handleToggleChange("apneaSueno", value)}
                   className="w-full"
+                  disabled={isSubmitted}
                 >
                   <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
                     Sí
@@ -344,27 +432,30 @@ export default function MedicalFormPage() {
                   </ToggleGroupItem>
                 </ToggleGroup>
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="block mb-2">Uso de Alcohol</Label>
-              <Select value={formData.usoAlcohol} onValueChange={(value) => handleSelectChange("usoAlcohol", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccione una opción" />
-                </SelectTrigger>
-                <SelectContent>
-                  {alcoholOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Label className="block mb-2">Uso de alcohol</Label>
+                <Select
+                  value={formData.usoAlcohol}
+                  onValueChange={(value) => handleSelectChange("usoAlcohol", value)}
+                  disabled={isSubmitted}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccione una opción" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {alcoholOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-6">
               <div className="space-y-2">
-                <Label className="block mb-2">Insuficiencia Cardíaca</Label>
+                <Label className="block mb-2">Insuficiencia cardíaca</Label>
                 <ToggleGroup
                   type="single"
                   value={formData.insuficienciaCardiaca}
@@ -372,6 +463,7 @@ export default function MedicalFormPage() {
                     value && handleToggleChange("insuficienciaCardiaca", value)
                   }
                   className="w-full"
+                  disabled={isSubmitted}
                 >
                   <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
                     Sí
@@ -383,7 +475,7 @@ export default function MedicalFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="block mb-2">Enfermedad Coronaria</Label>
+                <Label className="block mb-2">Enfermedad coronaria</Label>
                 <ToggleGroup
                   type="single"
                   value={formData.enfermedadCoronaria}
@@ -391,6 +483,7 @@ export default function MedicalFormPage() {
                     value && handleToggleChange("enfermedadCoronaria", value)
                   }
                   className="w-full"
+                  disabled={isSubmitted}
                 >
                   <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
                     Sí
@@ -402,12 +495,13 @@ export default function MedicalFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="block mb-2">Enfermedad Renal Crónica</Label>
+                <Label className="block mb-2">Enfermedad renal crónica</Label>
                 <ToggleGroup
                   type="single"
                   value={formData.enfermedadRenal}
                   onValueChange={(value: string | undefined) => value && handleToggleChange("enfermedadRenal", value)}
                   className="w-full"
+                  disabled={isSubmitted}
                 >
                   <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
                     Sí
@@ -419,9 +513,71 @@ export default function MedicalFormPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Guardando..." : "Guardar"}
-            </Button>
+            <div className="grid grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label className="block mb-2">Enfermedad cerebrovascular</Label>
+                <ToggleGroup
+                  type="single"
+                  value={formData.enfermedadCerebrovascular}
+                  onValueChange={(value: string | undefined) =>
+                    value && handleToggleChange("enfermedadCerebrovascular", value)
+                  }
+                  className="w-full"
+                  disabled={isSubmitted}
+                >
+                  <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                    Sí
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                    No
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="block mb-2">Enf. vascular periférica</Label>
+                <ToggleGroup
+                  type="single"
+                  value={formData.enfermedadVascular}
+                  onValueChange={(value: string | undefined) =>
+                    value && handleToggleChange("enfermedadVascular", value)
+                  }
+                  className="w-full"
+                  disabled={isSubmitted}
+                >
+                  <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                    Sí
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                    No
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="block mb-2">Diabetes mellitus</Label>
+                <ToggleGroup
+                  type="single"
+                  value={formData.diabetesMellitus}
+                  onValueChange={(value: string | undefined) => value && handleToggleChange("diabetesMellitus", value)}
+                  className="w-full"
+                  disabled={isSubmitted}
+                >
+                  <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                    Sí
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                    No
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+            </div>
+
+            {!isSubmitted && (
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Guardando..." : "Guardar"}
+              </Button>
+            )}
           </form>
 
           {scores !== null && (

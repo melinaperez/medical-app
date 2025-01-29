@@ -9,6 +9,7 @@ import {
   onAuthStateChanged,
   signOut as firebaseSignOut,
   sendEmailVerification,
+  sendPasswordResetEmail,
   type User,
 } from "firebase/auth"
 import { auth } from "@/lib/firebase"
@@ -24,6 +25,7 @@ type AuthContextType = {
   signInWithEmail: (email: string, password: string) => Promise<void>
   signUpWithEmail: (email: string, password: string) => Promise<void>
   resendVerificationEmail: () => Promise<void>
+  resetPassword: (email: string) => Promise<void>
   signOut: () => void
 }
 
@@ -36,6 +38,7 @@ const AuthContext = createContext<AuthContextType>({
   signInWithEmail: async () => {},
   signUpWithEmail: async () => {},
   resendVerificationEmail: async () => {},
+  resetPassword: async () => {},
   signOut: () => {},
 })
 
@@ -67,7 +70,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         router.push("/dashboard")
       })
       .catch((error) => {
-        console.error("Error de autenticación:", error)
         let errorMessage = "Error al iniciar sesión con Google"
 
         if (error.code === "auth/unauthorized-domain") {
@@ -94,7 +96,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       router.push("/dashboard")
     } catch (error: any) {
-      console.error("Error de inicio de sesión:", error)
       let errorMessage = "Error al iniciar sesión"
 
       if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
@@ -120,7 +121,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setError("Te hemos enviado un email de verificación. Por favor, verifica tu cuenta antes de iniciar sesión.")
     } catch (error: any) {
-      console.error("Error de registro:", error)
       let errorMessage = "Error al registrarse"
 
       if (error.code === "auth/email-already-in-use") {
@@ -144,10 +144,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       await sendEmailVerification(user)
-      setError("Email de verificación enviado. Por favor, revisa tu bandeja de entrada o spam.")
+      setError("Email de verificación enviado. Por favor, revisa tu bandeja de entrada.")
     } catch (error: any) {
-      console.error("Error al reenviar email de verificación:", error)
       setError("Error al enviar el email de verificación")
+    }
+  }
+
+  async function resetPassword(email: string) {
+    try {
+      await sendPasswordResetEmail(auth, email)
+      setError("Te hemos enviado un email para restablecer tu contraseña. Por favor, revisa tu bandeja de entrada.")
+    } catch (error: any) {
+      let errorMessage = "Error al enviar el email de recuperación"
+
+      if (error.code === "auth/user-not-found") {
+        errorMessage = "No existe una cuenta con este email"
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Email inválido"
+      }
+
+      setError(errorMessage)
+      throw error
     }
   }
 
@@ -156,8 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then(() => {
         router.push("/login")
       })
-      .catch((error) => {
-        console.error("Error al cerrar sesión:", error)
+      .catch(() => {
         setError("Error al cerrar sesión")
       })
   }
@@ -171,6 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithEmail,
     signUpWithEmail,
     resendVerificationEmail,
+    resetPassword,
     signOut,
   }
 

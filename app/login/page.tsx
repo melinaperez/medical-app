@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState} from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -18,13 +18,21 @@ const isValidEmail = (email: string) => {
 }
 
 export default function LoginPage() {
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, user, error } = useAuth()
+  const {
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    resetPassword: authResetPassword,
+    user,
+    error,
+  } = useAuth()
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
   const [showVerificationMessage, setShowVerificationMessage] = useState(false)
+  const [showResetMessage, setShowResetMessage] = useState(false)
 
   useEffect(() => {
     if (user?.emailVerified) {
@@ -59,12 +67,55 @@ export default function LoginPage() {
     }
   }
 
+  const handleResetPassword = async () => {
+    if (!email) {
+      setLocalError("Por favor, ingresa tu email")
+      return
+    }
+
+    if (!isValidEmail(email)) {
+      setLocalError("Por favor, ingresa un email válido")
+      return
+    }
+
+    setIsLoading(true)
+    setLocalError(null)
+    try {
+      await authResetPassword(email)
+      setShowResetMessage(true)
+      setLocalError(null)
+    } catch (error: any) {
+      let errorMessage = "Error al enviar el email de recuperación"
+
+      if (error.code === "auth/user-not-found") {
+        errorMessage = "No existe una cuenta con este email"
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Email inválido"
+      }
+
+      setLocalError(errorMessage)
+      setShowResetMessage(false)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, isSignUp: boolean) => {
     if (e.key === "Enter") {
       e.preventDefault()
       handleEmailAuth(isSignUp)
     }
   }
+
+  // Only show one message at a time, prioritizing errors
+  const alertMessage =
+    localError ||
+    error ||
+    (showResetMessage &&
+      "Te hemos enviado un email para restablecer tu contraseña. Por favor, revisa tu bandeja de entrada.") ||
+    (showVerificationMessage &&
+      "Te hemos enviado un email de verificación. Por favor, verifica tu cuenta antes de iniciar sesión.")
+  const alertVariant = localError || error ? "destructive" : "default"
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -103,9 +154,20 @@ export default function LoginPage() {
                   onKeyDown={(e) => handleKeyPress(e, false)}
                 />
               </div>
-              <Button type="button" className="w-full" onClick={() => handleEmailAuth(false)} disabled={isLoading}>
-                {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button type="button" className="w-full" onClick={() => handleEmailAuth(false)} disabled={isLoading}>
+                  {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="text-sm text-muted-foreground"
+                  onClick={handleResetPassword}
+                  disabled={isLoading}
+                >
+                  ¿Olvidaste tu contraseña?
+                </Button>
+              </div>
             </TabsContent>
 
             <TabsContent value="register" className="space-y-4">
@@ -151,17 +213,9 @@ export default function LoginPage() {
             Iniciar sesión con Google
           </Button>
 
-          {(error || localError) && (
-            <Alert variant="destructive" className="mt-4">
-              <AlertDescription>{error || localError}</AlertDescription>
-            </Alert>
-          )}
-
-          {showVerificationMessage && (
-            <Alert className="mt-4">
-              <AlertDescription>
-                Te hemos enviado un email de verificación. Por favor, verifica tu cuenta antes de iniciar sesión.
-              </AlertDescription>
+          {alertMessage && (
+            <Alert variant={alertVariant} className="mt-4">
+              <AlertDescription>{alertMessage}</AlertDescription>
             </Alert>
           )}
         </CardContent>
@@ -169,3 +223,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

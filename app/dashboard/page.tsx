@@ -170,7 +170,13 @@ export default function DashboardPage() {
     fetchStats()
   }, [user, router, isAdmin])
 
-  if (!user || loading) {
+  useEffect(() => {
+    if (!user) {
+      router.push("/login")
+    }
+  }, [user, router])
+
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-lg">Cargando...</p>
@@ -187,7 +193,7 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Bienvenido, {user.email}
+              Bienvenido, {user?.email}
               {isAdmin && <span className="ml-2 text-blue-600">(Administrador)</span>}
             </p>
           </div>
