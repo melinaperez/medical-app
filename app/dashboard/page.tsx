@@ -56,7 +56,6 @@ interface DashboardStats {
   totalPatients: number
   maleCount: number
   femaleCount: number
-  averageScore: number
   genderData: { name: string; value: number }[]
   scoreDistribution: ScoreDistribution[]
   allPatients: PatientData[]
@@ -66,7 +65,6 @@ const initialStats: DashboardStats = {
   totalPatients: 0,
   maleCount: 0,
   femaleCount: 0,
-  averageScore: 0,
   genderData: [],
   scoreDistribution: [],
   allPatients: [],
