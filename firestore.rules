@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Function to check if user is admin
+    function isAdmin() {
+      return request.auth.token.email in ['meli.y.perez92@gmail.com'];
+    }
+    
+    match /patients/{patient} {
+      // Allow read access if user is admin or if they are the doctor who created the record
+      allow read: if request.auth != null && 
+        (isAdmin() || resource.data.doctorId == request.auth.uid);
+      
+      // Allow write access only to authenticated users
+      allow create: if request.auth != null 
+        // Ensure doctorId and doctorEmail are set correctly
+        && request.resource.data.doctorId == request.auth.uid
+        && request.resource.data.doctorEmail == request.auth.token.email;
+        
+      // Allow updates only by the original doctor or admin
+      allow update: if request.auth != null &&
+        (resource.data.doctorId == request.auth.uid || isAdmin());
+        
+      // Allow delete only by admin or the original doctor
+      allow delete: if request.auth != null &&
+        (resource.data.doctorId == request.auth.uid || isAdmin());
+    }
+  }
+}

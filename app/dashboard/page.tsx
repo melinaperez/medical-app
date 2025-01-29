@@ -4,21 +4,41 @@ import { useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
 import { db } from "@/lib/firebase"
-import { collection, query, getDocs } from "firebase/firestore"
+import { collection, query, getDocs, where } from "firebase/firestore"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Users, UserPlus, Activity } from "lucide-react"
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { Users, UserPlus, Activity, ChevronLeft, ChevronRight } from "lucide-react"
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface PatientData {
   nombre: string
   apellido: string
   genero: string
   edad: number
-  colesterol: number
-  presionArterial: string
+  raza: string
+  colesterolTotal: number
+  colesterolHDL: number
+  presionSistolica: number
+  tratamientoHipertension: string
+  diabetes: string
+  fumador: string
   score: number
   createdAt: any
+  doctorId: string
+  doctorEmail: string
 }
 
 interface ScoreDistribution {
@@ -33,7 +53,7 @@ interface DashboardStats {
   averageScore: number
   genderData: { name: string; value: number }[]
   scoreDistribution: ScoreDistribution[]
-  recentPatients: PatientData[]
+  allPatients: PatientData[]
 }
 
 const initialStats: DashboardStats = {
@@ -43,14 +63,40 @@ const initialStats: DashboardStats = {
   averageScore: 0,
   genderData: [],
   scoreDistribution: [],
-  recentPatients: [],
+  allPatients: [],
 }
 
+const ITEMS_PER_PAGE_OPTIONS = [5, 10, 20, 50]
+
 export default function DashboardPage() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, isAdmin } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState<DashboardStats>(initialStats)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+
+  const getDisplayName = (patient: PatientData) => {
+    if (user?.uid === patient.doctorId) {
+      return `${patient.nombre} ${patient.apellido}`
+    }
+    return "**********"
+  }
+
+  // Pagination calculations
+  const totalPages = Math.ceil(stats.allPatients.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentPatients = stats.allPatients.slice(startIndex, endIndex)
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage)
+  }
+
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(Number(value))
+    setCurrentPage(1) // Reset to first page when changing items per page
+  }
 
   useEffect(() => {
     if (!user) {
@@ -62,7 +108,8 @@ export default function DashboardPage() {
       try {
         setLoading(true)
         const patientsRef = collection(db, "patients")
-        const querySnapshot = await getDocs(query(patientsRef))
+        const q = isAdmin ? query(patientsRef) : query(patientsRef, where("doctorId", "==", user.uid))
+        const querySnapshot = await getDocs(q)
 
         let total = 0
         let male = 0
@@ -74,8 +121,8 @@ export default function DashboardPage() {
         querySnapshot.forEach((doc) => {
           const data = doc.data() as PatientData
           total++
-          if (data.genero === "masculino") male++
-          if (data.genero === "femenino") female++
+          if (data.genero === "M") male++
+          if (data.genero === "F") female++
           if (data.score) {
             totalScore += data.score
             scores.push(data.score)
@@ -97,8 +144,8 @@ export default function DashboardPage() {
           count: scores.filter((score) => score >= range.min && score <= range.max).length,
         }))
 
-        // Sort patients by date and get the 5 most recent
-        const recentPatients = patients.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds).slice(0, 5)
+        // Sort patients by date
+        const sortedPatients = patients.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds)
 
         setStats({
           totalPatients: total,
@@ -110,7 +157,7 @@ export default function DashboardPage() {
             { name: "Femenino", value: female },
           ],
           scoreDistribution: distribution,
-          recentPatients,
+          allPatients: sortedPatients,
         })
       } catch (error) {
         console.error("Error fetching stats:", error)
@@ -120,7 +167,7 @@ export default function DashboardPage() {
     }
 
     fetchStats()
-  }, [user, router])
+  }, [user, router, isAdmin])
 
   if (!user || loading) {
     return (
@@ -138,7 +185,10 @@ export default function DashboardPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-sm text-muted-foreground mt-1">Bienvenido, {user.email}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Bienvenido, {user.email}
+              {isAdmin && <span className="ml-2 text-blue-600">(Administrador)</span>}
+            </p>
           </div>
           <div className="flex gap-2">
             <Button onClick={() => router.push("/medical-form")} className="flex items-center gap-2">
@@ -208,7 +258,7 @@ export default function DashboardPage() {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        label={false}
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
@@ -218,6 +268,18 @@ export default function DashboardPage() {
                         ))}
                       </Pie>
                       <Tooltip />
+                      <Legend
+                        layout="horizontal"
+                        verticalAlign="bottom"
+                        align="center"
+                        iconType="square"
+                        iconSize={10}
+                        formatter={(value, entry) => (
+                          <span className="text-sm">
+                            {value} ({(((entry.payload as any).value / stats.totalPatients) * 100).toFixed(0)}%)
+                          </span>
+                        )}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -253,36 +315,89 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Pacientes Recientes</CardTitle>
+            <CardTitle>
+              Pacientes
+              {isAdmin && <span className="text-sm font-normal text-muted-foreground ml-2">(Todos los pacientes)</span>}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {stats.recentPatients.length > 0 ? (
-              <div className="relative w-full overflow-auto">
-                <table className="w-full caption-bottom text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="h-12 px-4 text-left align-middle font-medium">Nombre</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">Género</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">Edad</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">Colesterol</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">Presión Arterial</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">Score</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stats.recentPatients.map((patient, index) => (
-                      <tr key={index} className="border-b">
-                        <td className="p-4">{`${patient.nombre} ${patient.apellido}`}</td>
-                        <td className="p-4 capitalize">{patient.genero}</td>
-                        <td className="p-4">{patient.edad}</td>
-                        <td className="p-4">{patient.colesterol}</td>
-                        <td className="p-4">{patient.presionArterial}</td>
-                        <td className="p-4">{patient.score}</td>
+            {stats.allPatients.length > 0 ? (
+              <>
+                <div className="relative w-full overflow-auto">
+                  <table className="w-full caption-bottom text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="h-12 px-4 text-left align-middle font-medium">Paciente</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium">Género</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium">Edad</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium">Raza</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium">Col. Total</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium">Col. HDL</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium">P. Sistólica</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium">Score</th>
+                        {isAdmin && <th className="h-12 px-4 text-left align-middle font-medium">Médico</th>}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {currentPatients.map((patient, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="p-4">{getDisplayName(patient)}</td>
+                          <td className="p-4 capitalize">{patient.genero}</td>
+                          <td className="p-4">{patient.edad}</td>
+                          <td className="p-4">{patient.raza}</td>
+                          <td className="p-4">{patient.colesterolTotal}</td>
+                          <td className="p-4">{patient.colesterolHDL}</td>
+                          <td className="p-4">{patient.presionSistolica}</td>
+                          <td className="p-4">{patient.score}</td>
+                          {isAdmin && <td className="p-4">{patient.doctorEmail}</td>}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex items-center justify-between space-x-2 py-4">
+                  <div className="flex items-center space-x-2">
+                    <p className="text-sm font-medium">Filas por página</p>
+                    <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
+                      <SelectTrigger className="h-8 w-[70px]">
+                        <SelectValue placeholder={itemsPerPage} />
+                      </SelectTrigger>
+                      <SelectContent side="top">
+                        {ITEMS_PER_PAGE_OPTIONS.map((value) => (
+                          <SelectItem key={value} value={String(value)}>
+                            {value}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <p className="text-sm font-medium">
+                      Página {currentPage} de {totalPages}
+                    </p>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </>
             ) : (
               <p className="text-muted-foreground">No hay pacientes registrados</p>
             )}

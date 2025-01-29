@@ -5,15 +5,17 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useEffect } from "react"
 
 export default function LoginPage() {
   const { signInWithGoogle, user, error } = useAuth()
   const router = useRouter()
 
-  if (user) {
-    router.push("/dashboard")
-    return null
-  }
+  useEffect(() => {
+    if (user) {
+      router.push("/dashboard")
+    }
+  }, [user, router])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -28,7 +30,7 @@ export default function LoginPage() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          <Button onClick={signInWithGoogle} className="w-full">
+          <Button type="button" onClick={() => signInWithGoogle()} className="w-full">
             Iniciar sesión con Google
           </Button>
         </CardContent>
