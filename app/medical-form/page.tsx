@@ -29,9 +29,15 @@ interface PatientData {
   insuficienciaCardiaca: string
   enfermedadCoronaria: string
   enfermedadRenal: string
-  enfermedadCerebrovascular: string // New field
-  enfermedadVascular: string // New field
-  diabetesMellitus: string // New field
+  enfermedadCerebrovascular: string
+  enfermedadVascular: string
+  diabetesMellitus: string
+  ecgSobrecarga: string
+  ecoHipertrofia: string
+  ecoDilatacion: string
+  extrasistolia: string
+  ejercicioAerobico: string
+  ejerciciosFuerza: string
   harms2afScore?: number
   mtaiwanScore?: number
 }
@@ -51,9 +57,15 @@ const initialFormData: PatientData = {
   insuficienciaCardiaca: "",
   enfermedadCoronaria: "",
   enfermedadRenal: "",
-  enfermedadCerebrovascular: "", // New field
-  enfermedadVascular: "", // New field
-  diabetesMellitus: "", // New field
+  enfermedadCerebrovascular: "",
+  enfermedadVascular: "",
+  diabetesMellitus: "",
+  ecgSobrecarga: "",
+  ecoHipertrofia: "",
+  ecoDilatacion: "",
+  extrasistolia: "",
+  ejercicioAerobico: "",
+  ejerciciosFuerza: "",
 }
 
 const fieldLabels: Record<string, string> = {
@@ -71,15 +83,33 @@ const fieldLabels: Record<string, string> = {
   insuficienciaCardiaca: "Insuficiencia cardíaca",
   enfermedadCoronaria: "Enfermedad coronaria",
   enfermedadRenal: "Enfermedad renal crónica",
-  enfermedadCerebrovascular: "Enfermedad cerebrovascular", // New field
-  enfermedadVascular: "Enf. vascular periférica", // New field
-  diabetesMellitus: "Diabetes mellitus", // New field
+  enfermedadCerebrovascular: "Enfermedad cerebrovascular",
+  enfermedadVascular: "Enf. vascular periférica",
+  diabetesMellitus: "Diabetes mellitus",
+  ecgSobrecarga: "ECG sobrecarga ventricular izquierda",
+  ecoHipertrofia: "ECO 2D hipertrofia ventricular izquierda",
+  ecoDilatacion: "ECO 2D dilatación auricular izquierda",
+  extrasistolia: "Extrasistolia supraventricular frecuente",
+  ejercicioAerobico: "Ejercicio aeróbico",
+  ejerciciosFuerza: "Ejercicios de fuerza",
 }
 
 const alcoholOptions = [
   { value: "ninguna", label: "Ninguna medida" },
   { value: "moderado", label: "7-14 medidas estándar/semana" },
   { value: "alto", label: ">=15 medidas estándar/semana" },
+]
+
+const ejercicioAerobicoOptions = [
+  { value: "no", label: "No" },
+  { value: "hasta150", label: "Hasta 150 min semanales" },
+  { value: "mas150", label: "Más 150 min semanales" },
+]
+
+const ejerciciosFuerzaOptions = [
+  { value: "no", label: "No" },
+  { value: "hasta60", label: "Hasta 60 min semanales" },
+  { value: "mas60", label: "Más de 60 min semanales" },
 ]
 
 const initialScore = null
@@ -573,6 +603,125 @@ export default function MedicalFormPage() {
               </div>
             </div>
 
+            {/* New fields */}
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="block mb-2">ECG sobrecarga ventricular izquierda</Label>
+                <ToggleGroup
+                  type="single"
+                  value={formData.ecgSobrecarga}
+                  onValueChange={(value: string | undefined) => value && handleToggleChange("ecgSobrecarga", value)}
+                  className="w-full"
+                  disabled={isSubmitted}
+                >
+                  <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                    Sí
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                    No
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="block mb-2">ECO 2D hipertrofia ventricular izquierda</Label>
+                <ToggleGroup
+                  type="single"
+                  value={formData.ecoHipertrofia}
+                  onValueChange={(value: string | undefined) => value && handleToggleChange("ecoHipertrofia", value)}
+                  className="w-full"
+                  disabled={isSubmitted}
+                >
+                  <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                    Sí
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                    No
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="block mb-2">ECO 2D dilatación auricular izquierda</Label>
+                <ToggleGroup
+                  type="single"
+                  value={formData.ecoDilatacion}
+                  onValueChange={(value: string | undefined) => value && handleToggleChange("ecoDilatacion", value)}
+                  className="w-full"
+                  disabled={isSubmitted}
+                >
+                  <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                    Sí
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                    No
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="block mb-2">Extrasistolia supraventricular frecuente</Label>
+                <ToggleGroup
+                  type="single"
+                  value={formData.extrasistolia}
+                  onValueChange={(value: string | undefined) => value && handleToggleChange("extrasistolia", value)}
+                  className="w-full"
+                  disabled={isSubmitted}
+                >
+                  <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                    Sí
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                    No
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <Label className="block mb-2">Ejercicio aeróbico</Label>
+                <Select
+                  value={formData.ejercicioAerobico}
+                  onValueChange={(value) => handleSelectChange("ejercicioAerobico", value)}
+                  disabled={isSubmitted}
+                >
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Seleccione una opción" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ejercicioAerobicoOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-4">
+                <Label className="block mb-2">Ejercicios de fuerza</Label>
+                <Select
+                  value={formData.ejerciciosFuerza}
+                  onValueChange={(value) => handleSelectChange("ejerciciosFuerza", value)}
+                  disabled={isSubmitted}
+                >
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Seleccione una opción" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ejerciciosFuerzaOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             {!isSubmitted && (
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Guardando..." : "Guardar"}
@@ -602,4 +751,3 @@ export default function MedicalFormPage() {
     </div>
   )
 }
-
