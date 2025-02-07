@@ -1,6 +1,8 @@
 import { AuthProvider } from "@/contexts/auth-context"
 import { Toaster } from "@/components/ui/toaster"
+import { HeaderLogos } from "@/components/header-logos"
 import "./globals.css"
+import type React from "react" // Added import for React
 
 export default function RootLayout({
   children,
@@ -11,6 +13,7 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <AuthProvider>
+          <HeaderLogos />
           {children}
           <Toaster />
         </AuthProvider>
@@ -18,4 +21,3 @@ export default function RootLayout({
     </html>
   )
 }
-
