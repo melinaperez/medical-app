@@ -11,7 +11,7 @@ export function HeaderLogos() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground font-bold">Avalado por</span>
+            <span className="text-sm text-muted-foreground font-bold">Avalado por:</span>
             <img
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/LOGO%20SIAC-DsDIlzruf2j0q1sMlIu17kE4OObK1o.png"
               alt="SIAC Logo"
@@ -26,7 +26,7 @@ export function HeaderLogos() {
           />
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground font-bold">Patrocinado por</span>
+            <span className="text-sm text-muted-foreground font-bold">Patrocinado por:</span>
             <img
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/LOGO%20OMRON.jpg-9jx8eDDFBRgCr8tEuLj0DVWtS6h7JQ.jpeg"
               alt="OMRON Logo"
