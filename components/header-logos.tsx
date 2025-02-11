@@ -26,7 +26,7 @@ export function HeaderLogos() {
           />
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground font-bold">Patrocinado por:</span>
+            <span className="text-sm text-muted-foreground font-bold"></span>
             <img
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/LOGO%20OMRON.jpg-9jx8eDDFBRgCr8tEuLj0DVWtS6h7JQ.jpeg"
               alt="OMRON Logo"
