@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
@@ -17,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface PatientData {
   nombre: string
   apellido: string
+  pais: string
   genero: string
   edad: string
   colesterolTotal: string
@@ -42,9 +45,18 @@ interface PatientData {
   mtaiwanScore?: number
 }
 
+interface ScoreResult {
+  harms2afScore: number
+  mtaiwanScore: number
+  heartsScore: number
+  heartsRiskLevel: string
+  heartsRiskColor: string
+}
+
 const initialFormData: PatientData = {
   nombre: "",
   apellido: "",
+  pais: "",
   genero: "",
   edad: "",
   colesterolTotal: "",
@@ -112,10 +124,19 @@ const ejerciciosFuerzaOptions = [
   { value: "mas60", label: "Más de 60 min semanales" },
 ]
 
+const countries = [
+  { code: "AR", name: "Argentina" },
+  { code: "CL", name: "Chile" },
+  { code: "CO", name: "Colombia" },
+  { code: "EC", name: "Ecuador" },
+  { code: "MX", name: "México" },
+  { code: "PE", name: "Perú" },
+].sort((a, b) => a.name.localeCompare(b.name))
+
 const initialScore = null
 const initialLoading = false
 const initialError = null
-const initialScores = null
+const initialScores: ScoreResult | null = null
 const initialIsSubmitted = false
 
 export default function MedicalFormPage() {
@@ -126,7 +147,7 @@ export default function MedicalFormPage() {
   const [loading, setLoading] = useState(initialLoading)
   const [error, setError] = useState<string | null>(initialError)
   const [formData, setFormData] = useState<PatientData>(initialFormData)
-  const [scores, setScores] = useState<{ harms2afScore: number; mtaiwanScore: number } | null>(initialScores)
+  const [scores, setScores] = useState<ScoreResult | null>(initialScores)
   const [isSubmitted, setIsSubmitted] = useState(initialIsSubmitted)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -235,6 +256,9 @@ export default function MedicalFormPage() {
         colesterolTotal: Number.parseInt(formData.colesterolTotal), //Added colesterolTotal
         harms2afScore: calculatedScores.harms2afScore,
         mtaiwanScore: calculatedScores.mtaiwanScore,
+        heartsScore: calculatedScores.heartsScore,
+        heartsRiskLevel: calculatedScores.heartsRiskLevel,
+        heartsRiskColor: calculatedScores.heartsRiskColor,
         doctorId: user.uid,
         doctorEmail: user.email,
         createdAt: serverTimestamp(),
@@ -325,6 +349,44 @@ export default function MedicalFormPage() {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="pais">País</Label>
+              <Select
+                value={formData.pais}
+                onValueChange={(value) => handleSelectChange("pais", value)}
+                disabled={isSubmitted}
+              >
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="Seleccione un país">
+                    {formData.pais && (
+                      <span className="flex items-center gap-2">
+                        <img
+                          src={`https://flagcdn.com/20x15/${formData.pais.toLowerCase()}.png`}
+                          alt={`${countries.find((c) => c.code === formData.pais)?.name} flag`}
+                          className="h-3.5 w-5 object-contain"
+                        />
+                        <span>{countries.find((c) => c.code === formData.pais)?.name}</span>
+                      </span>
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((country) => (
+                    <SelectItem key={country.code} value={country.code}>
+                      <span className="flex items-center gap-2">
+                        <img
+                          src={`https://flagcdn.com/20x15/${country.code.toLowerCase()}.png`}
+                          alt={`${country.name} flag`}
+                          className="h-3.5 w-5 object-contain"
+                        />
+                        <span>{country.name}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label className="block mb-2">Género</Label>
@@ -349,8 +411,8 @@ export default function MedicalFormPage() {
                   id="edad"
                   name="edad"
                   type="number"
-                  min="0"
-                  max="150"
+                  min="40"
+                  max="100"
                   value={formData.edad}
                   onChange={handleInputChange}
                   required
@@ -740,6 +802,11 @@ export default function MedicalFormPage() {
               <div className="p-4 bg-primary/10 rounded-lg">
                 <h3 className="font-semibold mb-2">Riesgo calculado mTaiwan-AF:</h3>
                 <p className="text-2xl font-bold">{scores.mtaiwanScore}</p>
+              </div>
+              <div className={`p-4 rounded-lg text-white ${scores.heartsRiskColor}`}>
+                <h3 className="font-semibold mb-2">Riesgo calculado HEARTS:</h3>
+                <p className="text-2xl font-bold">{scores.heartsScore}%</p>
+                <p className="text-lg">{scores.heartsRiskLevel}</p>
               </div>
               <Button variant="outline" onClick={() => router.push("/dashboard")} className="w-full">
                 Volver al Dashboard

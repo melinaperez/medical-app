@@ -39,9 +39,13 @@ interface PatientData {
   enfermedadRenal: string
   harms2afScore: number
   mtaiwanScore: number
+  heartsScore: number | null
+  heartsRiskLevel: string | null
+  heartsRiskColor: string | null
   createdAt: any
   doctorId: string
   doctorEmail: string
+  colesterolTotal: number
 }
 
 interface ScoreDistribution {
@@ -206,7 +210,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Pacientes</CardTitle>
@@ -216,27 +220,6 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold">{stats.totalPatients}</div>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pacientes Masculinos</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.maleCount || 0}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pacientes Femeninos</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.femaleCount || 0}</div>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -269,6 +252,43 @@ export default function DashboardPage() {
                         stats.allPatients.length,
                     )
                   : 0}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Riesgo calculado HEARTS</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {(() => {
+                  // Debug log
+                  console.log(
+                    "HEARTS Scores:",
+                    stats.allPatients.map((p) => p.heartsScore),
+                  )
+
+                  // Only include patients with valid heartsScore
+                  const validPatients = stats.allPatients.filter(
+                    (patient) => patient.heartsScore !== null && patient.heartsScore !== undefined,
+                  )
+
+                  // Debug log
+                  console.log("Valid patients count:", validPatients.length)
+
+                  if (validPatients.length === 0) {
+                    return "0%"
+                  }
+
+                  const average =
+                    validPatients.reduce((sum, patient) => sum + Number(patient.heartsScore), 0) / validPatients.length
+
+                  // Debug log
+                  console.log("Calculated average:", average)
+
+                  return `${Math.round(average)}%`
+                })()}
               </div>
             </CardContent>
           </Card>
@@ -368,10 +388,12 @@ export default function DashboardPage() {
                         <th className="h-12 px-4 text-left align-middle font-medium">Género</th>
                         <th className="h-12 px-4 text-left align-middle font-medium">Edad</th>
                         <th className="h-12 px-4 text-left align-middle font-medium">P. Sistólica</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium">Colesterol total</th>
                         <th className="h-12 px-4 text-left align-middle font-medium">
                           HARMS<sub>2</sub>-AF
                         </th>
                         <th className="h-12 px-4 text-left align-middle font-medium">mTaiwan-AF</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium">HEARTS</th>
                         {isAdmin && <th className="h-12 px-4 text-left align-middle font-medium">Médico</th>}
                       </tr>
                     </thead>
@@ -382,8 +404,16 @@ export default function DashboardPage() {
                           <td className="p-4 capitalize">{patient.genero}</td>
                           <td className="p-4">{patient.edad}</td>
                           <td className="p-4">{patient.presionSistolica}</td>
+                          <td className="p-4">{patient.colesterolTotal}</td>
                           <td className="p-4">{patient.harms2afScore}</td>
                           <td className="p-4">{patient.mtaiwanScore}</td>
+                          <td className={`p-4 ${patient.heartsRiskColor || "text-foreground"}`}>
+                            <span className={patient.heartsRiskColor ? "text-white" : ""}>
+                              {patient.heartsScore !== null
+                                ? `${patient.heartsScore}% (${patient.heartsRiskLevel})`
+                                : "N/A"}
+                            </span>
+                          </td>
                           {isAdmin && <td className="p-4">{patient.doctorEmail}</td>}
                         </tr>
                       ))}
