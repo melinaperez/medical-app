@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 interface ScoreResult {
   harms2afScore: number;
   mtaiwanScore: number;
+  frailScore: number;
+  frailInterpretation: string;
   heartsScore: number;
   heartsRiskLevel: string;
   heartsRiskColor: string;
@@ -25,6 +27,30 @@ const COUNTRY_REGIONS: Record<string, Region> = {
   CO: "central",
   MX: "central",
 };
+
+function calculateFrailScore(
+  estaFatigado: string,
+  subeEscaleras: string,
+  caminaManzana: string,
+  masCincoEnfermedades: string,
+  perdidaPeso: string
+): { score: number; interpretation: string } {
+  let score = 0;
+
+  if (estaFatigado === "S") score += 1;
+  if (subeEscaleras === "N") score += 1;
+  if (caminaManzana === "N") score += 1;
+  if (masCincoEnfermedades === "S") score += 1;
+  if (perdidaPeso === "S") score += 1;
+  let interpretation = "Robusto";
+  if (score >= 3) {
+    interpretation = "Frágil";
+  } else if (score >= 1) {
+    interpretation = "Prefrágil";
+  }
+
+  return { score, interpretation };
+}
 
 // Define risk matrix type
 type RiskMatrix = {
@@ -934,7 +960,12 @@ export async function POST(request: Request) {
       enfermedadCerebrovascular,
       enfermedadVascular,
       diabetesMellitus,
-      pais, // Add país to the destructuring
+      estaFatigado,
+      subeEscaleras,
+      caminaManzana,
+      masCincoEnfermedades,
+      perdidaPeso,
+      pais,
     } = data;
 
     // Calcular HARMS2-AF Score
@@ -1019,6 +1050,14 @@ export async function POST(request: Request) {
       mtaiwanScore += 1;
     }
 
+    const frailResult = calculateFrailScore(
+      estaFatigado,
+      subeEscaleras,
+      caminaManzana,
+      masCincoEnfermedades,
+      perdidaPeso,
+    )
+
     // Calculate HEARTS score with país
     const heartsResult = calculateHeartsScore(
       edadNum,
@@ -1037,6 +1076,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       harms2afScore,
       mtaiwanScore,
+      frailScore: frailResult.score,
+      frailInterpretation: frailResult.interpretation,
       heartsScore: heartsResult.score,
       heartsRiskLevel: heartsResult.riskLevel,
       heartsRiskColor: heartsResult.color,

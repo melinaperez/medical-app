@@ -15,6 +15,8 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/components/ui/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { HelpCircle } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface PatientData {
   nombre: string
@@ -41,6 +43,11 @@ interface PatientData {
   extrasistolia: string
   ejercicioAerobico: string
   ejerciciosFuerza: string
+  estaFatigado: string
+  subeEscaleras: string
+  caminaManzana: string
+  masCincoEnfermedades: string
+  perdidaPeso: string
   harms2afScore?: number
   mtaiwanScore?: number
 }
@@ -48,6 +55,8 @@ interface PatientData {
 interface ScoreResult {
   harms2afScore: number
   mtaiwanScore: number
+  frailScore: number
+  frailInterpretation: string
   heartsScore: number
   heartsRiskLevel: string
   heartsRiskColor: string
@@ -78,6 +87,11 @@ const initialFormData: PatientData = {
   extrasistolia: "",
   ejercicioAerobico: "",
   ejerciciosFuerza: "",
+  estaFatigado: "",
+  subeEscaleras: "",
+  caminaManzana: "",
+  masCincoEnfermedades: "",
+  perdidaPeso: "",
 }
 
 const fieldLabels: Record<string, string> = {
@@ -104,6 +118,11 @@ const fieldLabels: Record<string, string> = {
   extrasistolia: "Extrasistolia supraventricular frecuente",
   ejercicioAerobico: "Ejercicio aeróbico",
   ejerciciosFuerza: "Ejercicios de fuerza",
+  estaFatigado: "¿Está usted fatigado?",
+  subeEscaleras: "¿Puede subir un piso de escaleras?",
+  caminaManzana: "¿Puede caminar una manzana?",
+  masCincoEnfermedades: "¿Tiene más de cinco enfermedades?",
+  perdidaPeso: "¿Ha perdido más del 5% de su peso en los últimos 6 meses?",
 }
 
 const alcoholOptions = [
@@ -256,6 +275,8 @@ export default function MedicalFormPage() {
         colesterolTotal: Number.parseInt(formData.colesterolTotal), //Added colesterolTotal
         harms2afScore: calculatedScores.harms2afScore,
         mtaiwanScore: calculatedScores.mtaiwanScore,
+        frailScore: calculatedScores.frailScore,
+        frailInterpretation: calculatedScores.frailInterpretation,
         heartsScore: calculatedScores.heartsScore,
         heartsRiskLevel: calculatedScores.heartsRiskLevel,
         heartsRiskColor: calculatedScores.heartsRiskColor,
@@ -741,46 +762,157 @@ export default function MedicalFormPage() {
                 </ToggleGroup>
               </div>
             </div>
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold">Evaluación de Estado Físico</h3>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <Label className="block mb-2">Ejercicio aeróbico</Label>
+                  <Select
+                    value={formData.ejercicioAerobico}
+                    onValueChange={(value) => handleSelectChange("ejercicioAerobico", value)}
+                    disabled={isSubmitted}
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Seleccione una opción" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ejercicioAerobicoOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <Label className="block mb-2">Ejercicio aeróbico</Label>
-                <Select
-                  value={formData.ejercicioAerobico}
-                  onValueChange={(value) => handleSelectChange("ejercicioAerobico", value)}
-                  disabled={isSubmitted}
-                >
-                  <SelectTrigger className="h-10">
-                    <SelectValue placeholder="Seleccione una opción" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ejercicioAerobicoOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-4">
+                  <Label className="block mb-2">Ejercicios de fuerza</Label>
+                  <Select
+                    value={formData.ejerciciosFuerza}
+                    onValueChange={(value) => handleSelectChange("ejerciciosFuerza", value)}
+                    disabled={isSubmitted}
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Seleccione una opción" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ejerciciosFuerzaOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="block mb-2">¿Está usted fatigado?</Label>
+                  <ToggleGroup
+                    type="single"
+                    value={formData.estaFatigado}
+                    onValueChange={(value: string | undefined) => value && handleToggleChange("estaFatigado", value)}
+                    className="w-full"
+                    disabled={isSubmitted}
+                  >
+                    <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                      Sí
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                      No
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="block mb-2">¿Puede subir un piso de escaleras?</Label>
+                  <ToggleGroup
+                    type="single"
+                    value={formData.subeEscaleras}
+                    onValueChange={(value: string | undefined) => value && handleToggleChange("subeEscaleras", value)}
+                    className="w-full"
+                    disabled={isSubmitted}
+                  >
+                    <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                      Sí
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                      No
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
               </div>
 
-              <div className="space-y-4">
-                <Label className="block mb-2">Ejercicios de fuerza</Label>
-                <Select
-                  value={formData.ejerciciosFuerza}
-                  onValueChange={(value) => handleSelectChange("ejerciciosFuerza", value)}
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="block mb-2">¿Puede caminar una manzana?</Label>
+                  <ToggleGroup
+                    type="single"
+                    value={formData.caminaManzana}
+                    onValueChange={(value: string | undefined) => value && handleToggleChange("caminaManzana", value)}
+                    className="w-full"
+                    disabled={isSubmitted}
+                  >
+                    <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                      Sí
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                      No
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="block mb-2">
+                    ¿Tiene más de cinco enfermedades?{" "}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <HelpCircle className="inline h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-[300px] text-sm">
+                          Hipertensión, diabetes, cáncer (que no sea un cáncer de piel leve), enfermedad pulmonar
+                          crónica, infarto de miocardio, insuficiencia cardiaca congestiva, angina de pecho, asma,
+                          artritis, accidente cerebrovascular y/o enfermedad renal
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </Label>
+                  <ToggleGroup
+                    type="single"
+                    value={formData.masCincoEnfermedades}
+                    onValueChange={(value: string | undefined) =>
+                      value && handleToggleChange("masCincoEnfermedades", value)
+                    }
+                    className="w-full"
+                    disabled={isSubmitted}
+                  >
+                    <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                      Sí
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                      No
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="block mb-2">¿Ha perdido más del 5% de su peso en los últimos 6 meses?</Label>
+                <ToggleGroup
+                  type="single"
+                  value={formData.perdidaPeso}
+                  onValueChange={(value: string | undefined) => value && handleToggleChange("perdidaPeso", value)}
+                  className="w-full"
                   disabled={isSubmitted}
                 >
-                  <SelectTrigger className="h-10">
-                    <SelectValue placeholder="Seleccione una opción" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ejerciciosFuerzaOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <ToggleGroupItem value="S" className="flex-1" aria-label="Sí">
+                    Sí
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="N" className="flex-1" aria-label="No">
+                    No
+                  </ToggleGroupItem>
+                </ToggleGroup>
               </div>
             </div>
 
@@ -803,6 +935,12 @@ export default function MedicalFormPage() {
                 <h3 className="font-semibold mb-2">Riesgo calculado mTaiwan-AF:</h3>
                 <p className="text-2xl font-bold">{scores.mtaiwanScore}</p>
               </div>
+               <div className="p-4 bg-primary/10 rounded-lg">
+                <h3 className="font-semibold mb-2">Escala FRAIL:</h3>
+                <p className="text-2xl font-bold">
+                  {scores.frailScore} - {scores.frailInterpretation}
+                </p>
+              </div>
               <div className={`p-4 rounded-lg text-white ${scores.heartsRiskColor}`}>
                 <h3 className="font-semibold mb-2">Riesgo calculado HEARTS:</h3>
                 <p className="text-2xl font-bold">{scores.heartsScore}%</p>
@@ -818,3 +956,4 @@ export default function MedicalFormPage() {
     </div>
   )
 }
+
