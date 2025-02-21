@@ -925,6 +925,17 @@ export default function MedicalFormPage() {
 
           {scores !== null && (
             <div className="mt-6 space-y-4">
+              <div className={`p-4 rounded-lg text-white ${scores.heartsRiskColor}`}>
+                <h3 className="font-semibold mb-2">Riesgo calculado HEARTS:</h3>
+                <p className="text-2xl font-bold">{scores.heartsScore}%</p>
+                <p className="text-lg">{scores.heartsRiskLevel}</p>
+              </div>
+              <div className="p-4 bg-primary/10 rounded-lg">
+                <h3 className="font-semibold mb-2">Escala FRAIL:</h3>
+                <p className="text-2xl font-bold">
+                  {scores.frailScore} - {scores.frailInterpretation}
+                </p>
+              </div>
               <div className="p-4 bg-primary/10 rounded-lg">
                 <h3 className="font-semibold mb-2">
                   Riesgo calculado HARMS<sub>2</sub>-AF:
@@ -934,17 +945,6 @@ export default function MedicalFormPage() {
               <div className="p-4 bg-primary/10 rounded-lg">
                 <h3 className="font-semibold mb-2">Riesgo calculado mTaiwan-AF:</h3>
                 <p className="text-2xl font-bold">{scores.mtaiwanScore}</p>
-              </div>
-               <div className="p-4 bg-primary/10 rounded-lg">
-                <h3 className="font-semibold mb-2">Escala FRAIL:</h3>
-                <p className="text-2xl font-bold">
-                  {scores.frailScore} - {scores.frailInterpretation}
-                </p>
-              </div>
-              <div className={`p-4 rounded-lg text-white ${scores.heartsRiskColor}`}>
-                <h3 className="font-semibold mb-2">Riesgo calculado HEARTS:</h3>
-                <p className="text-2xl font-bold">{scores.heartsScore}%</p>
-                <p className="text-lg">{scores.heartsRiskLevel}</p>
               </div>
               <Button variant="outline" onClick={() => router.push("/dashboard")} className="w-full">
                 Volver al Dashboard
@@ -956,4 +956,3 @@ export default function MedicalFormPage() {
     </div>
   )
 }
-

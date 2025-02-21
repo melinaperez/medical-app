@@ -233,9 +233,9 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold">
                 {stats.allPatients.length > 0
                   ? Math.round(
-                    stats.allPatients.reduce((sum, patient) => sum + patient.harms2afScore, 0) /
-                    stats.allPatients.length,
-                  )
+                      stats.allPatients.reduce((sum, patient) => sum + patient.harms2afScore, 0) /
+                        stats.allPatients.length,
+                    )
                   : 0}
               </div>
             </CardContent>
@@ -250,9 +250,9 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold">
                 {stats.allPatients.length > 0
                   ? Math.round(
-                    stats.allPatients.reduce((sum, patient) => sum + patient.mtaiwanScore, 0) /
-                    stats.allPatients.length,
-                  )
+                      stats.allPatients.reduce((sum, patient) => sum + patient.mtaiwanScore, 0) /
+                        stats.allPatients.length,
+                    )
                   : 0}
               </div>
             </CardContent>
@@ -391,12 +391,12 @@ export default function DashboardPage() {
                         <th className="h-12 px-4 text-left align-middle font-medium">Edad</th>
                         <th className="h-12 px-4 text-left align-middle font-medium">P. Sistólica</th>
                         <th className="h-12 px-4 text-left align-middle font-medium">Colesterol total</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium">HEARTS</th>
                         <th className="h-12 px-4 text-left align-middle font-medium">FRAIL</th>
                         <th className="h-12 px-4 text-left align-middle font-medium">
                           HARMS<sub>2</sub>-AF
                         </th>
                         <th className="h-12 px-4 text-left align-middle font-medium">mTaiwan-AF</th>
-                        <th className="h-12 px-4 text-left align-middle font-medium">HEARTS</th>
                         {isAdmin && <th className="h-12 px-4 text-left align-middle font-medium">Médico</th>}
                       </tr>
                     </thead>
@@ -408,11 +408,6 @@ export default function DashboardPage() {
                           <td className="p-4">{patient.edad}</td>
                           <td className="p-4">{patient.presionSistolica}</td>
                           <td className="p-4">{patient.colesterolTotal}</td>
-                          <td className="p-4">
-                            {patient.frailScore} - {patient.frailInterpretation}
-                          </td>
-                          <td className="p-4">{patient.harms2afScore}</td>
-                          <td className="p-4">{patient.mtaiwanScore}</td>
                           <td className={`p-4 ${patient.heartsRiskColor || "text-foreground"}`}>
                             <span className={patient.heartsRiskColor ? "text-white" : ""}>
                               {patient.heartsScore !== null
@@ -420,6 +415,11 @@ export default function DashboardPage() {
                                 : "N/A"}
                             </span>
                           </td>
+                          <td className="p-4">
+                            {patient.frailScore} - {patient.frailInterpretation}
+                          </td>
+                          <td className="p-4">{patient.harms2afScore}</td>
+                          <td className="p-4">{patient.mtaiwanScore}</td>
                           {isAdmin && <td className="p-4">{patient.doctorEmail}</td>}
                         </tr>
                       ))}
@@ -478,4 +478,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-
