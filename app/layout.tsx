@@ -11,8 +11,17 @@ export const metadata: Metadata = {
   description: "Aplicación para cálculo de riesgo cardiovascular",
   manifest: "/manifest.json",
   icons: {
-    icon: "/icon.png",
-    apple: [{ url: "/icon.png", sizes: "512x512", type: "image/png" }],
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-196.png", sizes: "196x196", type: "image/png" },
+      { url: "/icon.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-icon-120.png", sizes: "120x120", type: "image/png" },
+      { url: "/apple-icon-152.png", sizes: "152x152", type: "image/png" },
+      { url: "/apple-icon-167.png", sizes: "167x167", type: "image/png" },
+      { url: "/apple-icon-180.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   themeColor: "#ffffff",
   appleWebApp: {
