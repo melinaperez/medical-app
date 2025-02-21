@@ -7,10 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "generate-icons": "ts-node scripts/generate-icons.ts",
     "generate-screenshots": "ts-node scripts/generate-screenshots.ts",
     "generate-screenshots:prod": "cross-env SCREENSHOT_BASE_URL=https://medical-app-plum.vercel.app/ ts-node scripts/generate-screenshots.ts",
-    "prepare-pwa": "npm run generate-icons && npm run generate-screenshots"
+    "prepare-pwa": "npm run generate-icons",
+    "generate-icons": "ts-node scripts/generate-basic-icons.ts"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.1",
@@ -36,7 +36,7 @@
   "devDependencies": {
     "@playwright/test": "^1.41.2",
     "@types/dotenv": "^8.2.3",
-    "@types/node": "^20",
+    "@types/node": "^20.17.19",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/web-push": "^3.6.4",
