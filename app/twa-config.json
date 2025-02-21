@@ -1,0 +1,52 @@
+{
+    "packageId": "com.prescriptionseeding.app",
+    "host": "your-deployed-url.vercel.app",
+    "name": "Prescription Seeding",
+    "launcherName": "PrescriptionSeeding",
+    "display": "standalone",
+    "themeColor": "#FFFFFF",
+    "navigationColor": "#000000",
+    "navigationColorDark": "#000000",
+    "navigationDividerColor": "#000000",
+    "navigationDividerColorDark": "#000000",
+    "backgroundColor": "#FFFFFF",
+    "enableNotifications": true,
+    "startUrl": "/",
+    "iconUrl": "/icon-512x512.png",
+    "maskableIconUrl": "/icon-512x512.png",
+    "splashScreenFadeOutDuration": 300,
+    "signingKey": {
+      "path": "./android.keystore",
+      "alias": "android"
+    },
+    "appVersionName": "1.0.0",
+    "appVersionCode": 1,
+    "shortcuts": [
+      {
+        "name": "Nuevo Paciente",
+        "short_name": "Nuevo",
+        "url": "/medical-form",
+        "icons": [
+          {
+            "src": "/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+          }
+        ]
+      },
+      {
+        "name": "Dashboard",
+        "short_name": "Dashboard",
+        "url": "/dashboard",
+        "icons": [
+          {
+            "src": "/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+          }
+        ]
+      }
+    ],
+    "generatorApp": "PWABuilder",
+    "webManifestUrl": "/manifest.json"
+  }  
