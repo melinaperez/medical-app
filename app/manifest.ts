@@ -23,6 +23,8 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "maskable",
       },
     ],
+    orientation: "portrait",
+    id: "com.prescriptionseeding.app.v1",
   }
 }
 
