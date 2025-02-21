@@ -1,0 +1,87 @@
+{
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+      {
+        "type": "Container",
+        "items": [
+          {
+            "type": "TextBlock",
+            "text": "Riesgo Cardiovascular",
+            "weight": "Bolder",
+            "size": "Large"
+          },
+          {
+            "type": "ColumnSet",
+            "columns": [
+              {
+                "type": "Column",
+                "width": "stretch",
+                "items": [
+                  {
+                    "type": "TextBlock",
+                    "text": "Alto Riesgo",
+                    "weight": "Bolder"
+                  },
+                  {
+                    "type": "TextBlock",
+                    "text": "${highRiskPercentage}%",
+                    "size": "ExtraLarge",
+                    "color": "Attention"
+                  }
+                ]
+              },
+              {
+                "type": "Column",
+                "width": "stretch",
+                "items": [
+                  {
+                    "type": "TextBlock",
+                    "text": "Total Pacientes",
+                    "weight": "Bolder"
+                  },
+                  {
+                    "type": "TextBlock",
+                    "text": "${totalPatients}",
+                    "size": "ExtraLarge"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "FactSet",
+            "facts": [
+              {
+                "title": "HEARTS Promedio:",
+                "value": "${averageScores.hearts}%"
+              },
+              {
+                "title": "HARMS₂-AF:",
+                "value": "${averageScores.harms2af}"
+              },
+              {
+                "title": "mTaiwan-AF:",
+                "value": "${averageScores.mtaiwan}"
+              }
+            ]
+          },
+          {
+            "type": "TextBlock",
+            "text": "Última actualización: ${lastUpdate}",
+            "size": "Small",
+            "isSubtle": true
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "type": "Action.OpenUrl",
+        "title": "Ver Detalles",
+        "url": "${baseUrl}/dashboard"
+      }
+    ]
+  }
+  
+  

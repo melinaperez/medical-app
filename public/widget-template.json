@@ -1,0 +1,53 @@
+{
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+      {
+        "type": "Container",
+        "items": [
+          {
+            "type": "TextBlock",
+            "text": "Resumen de Pacientes",
+            "weight": "Bolder",
+            "size": "Large"
+          },
+          {
+            "type": "FactSet",
+            "facts": [
+              {
+                "title": "Pacientes Hoy:",
+                "value": "${patientsToday}"
+              },
+              {
+                "title": "HARMS₂-AF Promedio:",
+                "value": "${averageScores.harms2af}"
+              },
+              {
+                "title": "mTaiwan-AF Promedio:",
+                "value": "${averageScores.mtaiwan}"
+              },
+              {
+                "title": "HEARTS Promedio:",
+                "value": "${averageScores.hearts}%"
+              }
+            ]
+          },
+          {
+            "type": "TextBlock",
+            "text": "Última actualización: ${lastUpdate}",
+            "size": "Small",
+            "isSubtle": true
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "type": "Action.OpenUrl",
+        "title": "Ver Dashboard",
+        "url": "${baseUrl}/dashboard"
+      }
+    ]
+  }
+  
+  

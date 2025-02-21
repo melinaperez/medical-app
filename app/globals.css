@@ -76,3 +76,29 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Estilos específicos para el panel lateral de Edge */
+@media (display-mode: side-panel) {
+  /* Ajustar el layout para el panel lateral */
+  .layout-container {
+    max-width: 100%;
+    padding: 0.5rem;
+  }
+
+  /* Hacer los elementos más compactos */
+  .card {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Ajustar tamaños de fuente */
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  /* Ocultar elementos no esenciales en el panel lateral */
+  .hide-in-side-panel {
+    display: none;
+  }
+}
+
+

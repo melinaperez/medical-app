@@ -17,6 +17,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HelpCircle } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useSearchParams } from "next/navigation"
 
 interface PatientData {
   nombre: string
@@ -161,6 +162,7 @@ const initialIsSubmitted = false
 export default function MedicalFormPage() {
   const { user } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const [score, setScore] = useState<number | null>(initialScore)
   const [loading, setLoading] = useState(initialLoading)
@@ -168,14 +170,49 @@ export default function MedicalFormPage() {
   const [formData, setFormData] = useState<PatientData>(initialFormData)
   const [scores, setScores] = useState<ScoreResult | null>(initialScores)
   const [isSubmitted, setIsSubmitted] = useState(initialIsSubmitted)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     if (!user) {
       router.push("/login")
+      return
     }
     setIsLoading(false)
   }, [user, router])
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/login")
+      return
+    }
+
+    // Verificar si hay datos en la URL
+    const urlData = searchParams.get("data")
+    if (urlData) {
+      try {
+        const parsedData = JSON.parse(decodeURIComponent(urlData))
+        if (parsedData.type === "patient") {
+          // Actualizar el formulario con los datos recibidos
+          setFormData((prev) => ({
+            ...prev,
+            ...parsedData.data,
+          }))
+
+          toast({
+            title: "Datos cargados",
+            description: "El formulario ha sido prellenado con los datos recibidos",
+          })
+        }
+      } catch (error) {
+        console.error("Error parsing URL data:", error)
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Error al cargar los datos del formulario",
+        })
+      }
+    }
+  }, [user, router, searchParams, toast])
 
   if (isLoading) {
     return (
@@ -956,3 +993,4 @@ export default function MedicalFormPage() {
     </div>
   )
 }
+
