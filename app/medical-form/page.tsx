@@ -17,6 +17,17 @@ import { useToast } from "@/components/ui/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HelpCircle } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useBeforeUnload } from "react-use"
 
 interface PatientData {
   nombre: string
@@ -169,6 +180,7 @@ export default function MedicalFormPage() {
   const [scores, setScores] = useState<ScoreResult | null>(initialScores)
   const [isSubmitted, setIsSubmitted] = useState(initialIsSubmitted)
   const [isLoading, setIsLoading] = useState(true)
+  const [showExitConfirmation, setShowExitConfirmation] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -176,6 +188,12 @@ export default function MedicalFormPage() {
     }
     setIsLoading(false)
   }, [user, router])
+
+  // Show browser confirmation when trying to navigate away
+  useBeforeUnload(
+    !isSubmitted,
+    "¿Está seguro de que desea salir? Los cambios no guardados se perderán."
+  );
 
   if (isLoading) {
     return (
@@ -324,7 +342,10 @@ export default function MedicalFormPage() {
           </div>
           <div className="flex gap-2">
             {isSubmitted && <Button onClick={handleNewPatient}>Nuevo Paciente</Button>}
-            <Button variant="outline" onClick={() => router.push("/dashboard")}>
+            <Button
+              variant="outline"
+              onClick={() => isSubmitted ? router.push("/dashboard") : setShowExitConfirmation(true)}
+            >
               Volver al Dashboard
             </Button>
           </div>
@@ -946,13 +967,32 @@ export default function MedicalFormPage() {
                 <h3 className="font-semibold mb-2">Riesgo calculado mTaiwan-AF:</h3>
                 <p className="text-2xl font-bold">{scores.mtaiwanScore}</p>
               </div>
-              <Button variant="outline" onClick={() => router.push("/dashboard")} className="w-full">
+              <Button
+                variant="outline"
+                onClick={() => router.push("/dashboard")}
+                className="w-full"
+              >
                 Volver al Dashboard
               </Button>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Exit confirmation dialog */}
+      <AlertDialog open={showExitConfirmation} onOpenChange={setShowExitConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Está seguro de que desea volver al dashboard?</AlertDialogTitle>
+            <AlertDialogDescription>Si no ha guardado los datos, estos se perderán.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => router.push("/dashboard")}>Aceptar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
+
