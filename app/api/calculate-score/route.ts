@@ -8,6 +8,9 @@ interface ScoreResult {
   heartsScore: number;
   heartsRiskLevel: string;
   heartsRiskColor: string;
+  score2Risk: number;
+  score2RiskLevel: string;
+  score2RiskColor: string;
 }
 
 interface Range {
@@ -26,6 +29,15 @@ const COUNTRY_REGIONS: Record<string, Region> = {
   PE: "andean",
   CO: "central",
   MX: "central",
+};
+
+// Define gender types
+type Gender = "F" | "M"
+
+// Define genders mapping
+const GENDERS: Record<string, Gender> = {
+  M: "M",
+  F: "F",
 };
 
 function calculateFrailScore(
@@ -58,8 +70,312 @@ type RiskMatrix = {
   female: number[][][][];
 };
 
+// Define risk matrix type
+type Score2RiskMatrix = {
+  nonSmoking: number[][][];
+  smoking: number[][][];
+};
+
+// Define matrices for gender
+
+// Define matrices for gender
+const SCORE2_RISK_MATRICES: Record<Gender, Score2RiskMatrix> = {
+	F: {
+		nonSmoking: [
+			// 40-44
+			[
+				[1, 1, 1, 1],
+				[1, 1, 1, 2],
+				[1, 2, 2, 2],
+				[2, 2, 3, 3]
+			],
+			// 45-49
+			[
+				[1, 1, 1, 2],
+				[2, 2, 2, 2],
+				[2, 2, 3, 3],
+				[3, 3, 3, 4]
+			],
+			// 50-54
+			[
+				[2, 2, 2, 2],
+				[2, 2, 3, 3],
+				[3, 3, 4, 4],
+				[4, 4, 5, 5]
+			],
+			// 55-59
+			[
+				[3,3,3,3],
+				[3,3,4,4],
+				[4,4,5,5],
+				[5,6,6,7]
+			],
+			// 60-64
+			[
+				[4,4,4,5],
+				[5,5,5,6],
+				[6,6,7,7],
+				[7,8,8,9]
+			],
+			// 65-69
+			[
+				[5,6,6,6],
+				[7,7,7,8],
+				[8,9,9,9],
+				[10,10,11,12]
+			],
+			// 70-74
+			[
+				[7,7,8,8],
+				[9,9,10,11],
+				[11,11,12,13],
+				[13,14,15,16]
+			],
+			// 75-79
+			[
+				[12,12,13,14],
+				[14,15,15,16],
+				[16,17,18,19],
+				[19,20,21,23]
+			],
+			// 80-84
+			[
+				[19,20,21,22],
+				[21,22,24,25],
+				[24,25,27,28],
+				[27,28,30,31]
+			],
+			// 85-89
+			[
+				[30,32,33,34],
+				[32,34,35,37],
+				[35,36,38,39],
+				[37,39,40,42]
+			],
+		],
+		smoking: [
+			// 40-44
+			[
+				[2,2,2,3],
+				[3,3,3,4],
+				[3,4,5,5],
+				[5,5,6,7]
+			],
+			// 45-49
+			[
+				[3,3,3,4],
+				[3,4,4,5],
+				[5,5,6,6],
+				[6,7,8,9]
+			],
+			// 50-54
+			[
+				[3,4,4,5],
+				[5,5,6,6],
+				[6,6,7,8],
+				[8,8,9,10]
+			],
+			// 55-59
+			[
+				[5,5,6,6],
+				[6,7,7,8],
+				[8,8,9,10],
+				[10,11,11,12]
+			],
+			// 60-64
+			[
+				[6,7,7,8],
+				[8,9,9,10],
+				[10,11,11,12],
+				[12,13,14,15]
+			],
+			// 65-69
+			[
+				[9,9,9,10],
+				[10,11,12,12],
+				[13,13,14,15],
+				[15,16,17,18]
+			],
+			// 70-74
+			[
+				[12,13,13,14],
+				[15,16,17,18],
+				[18,19,20,22],
+				[22,23,25,26]
+			],
+			// 75-79
+			[
+				[17,18,19,20],
+				[20,21,22,24],
+				[24,25,26,28],
+				[27,29,30,32]
+			],
+			// 80-84
+			[
+				[24,25,27,28],
+				[27,28,30,31],
+				[30,32,33,35],
+				[34,35,37,39]
+			],
+			// 85-89
+			[
+				[34,35,37,38],
+				[36,38,39,41],
+				[39,40,42,43],
+				[41,43,44,46]
+			],
+		],
+  },
+	M: {
+		nonSmoking: [
+			// 40-44
+			[
+				[2,2,2,3],
+				[2,3,3,4],
+				[3,4,4,5],
+				[4,5,6,7]
+			],
+			// 45-49
+			[
+				[2,3,3,4],
+				[3,4,4,5],
+				[4,5,5,6],
+				[5,6,7,8]
+			],
+			// 50-54
+			[
+				[3,4,4,5],
+				[4,5,5,6],
+				[5,6,7,8],
+				[7,8,9,10]
+			],
+			// 55-59
+			[
+				[4,5,6,6],
+				[5,6,7,8],
+				[7,8,9,10],
+				[9,10,11,12]
+			],
+			// 60-64
+			[
+				[6,7,7,8],
+				[7,8,9,10],
+				[9,10,11,12],
+				[11,12,13,15]
+			],
+			// 65-69
+			[
+				[8,9,10,10],
+				[10,11,12,13],
+				[12,13,14,15],
+				[14,15,17,18]
+			],
+			// 70-74
+			[
+				[10,11,12,13],
+				[12,13,15,16],
+				[15,17,18,20],
+				[19,21,23,25]
+			],
+			// 75-79
+			[
+				[15,17,19,22],
+				[17,20,23,26],
+				[21,23,27,30],
+				[24,27,31,35]
+			],
+			// 80-84
+			[
+				[22,26,31,36],
+				[25,29,34,40],
+				[27,32,37,43],
+				[30,35,41,47]
+			],
+			// 85-89
+			[
+				[32,39,47,55],
+				[34,41,49,57],
+				[36,43,51,59],
+				[37,45,53,62]
+			],
+		],
+		smoking: [
+			// 40-44
+			[
+				[3,4,5,6],
+				[4,5,6,8],
+				[6,7,8,10],
+				[8,9,11,13]
+			],
+			// 45-49
+			[
+				[4,5,6,7],
+				[5,7,8,9],
+				[7,8,10,12],
+				[9,11,13,15]
+			],
+			// 50-54
+			[
+				[5,6,7,8],
+				[7,8,9,11],
+				[9,10,12,14],
+				[11,13,15,17]
+			],
+			// 55-59
+			[
+				[7,8,9,10],
+				[9,10,11,13],
+				[11,13,14,16],
+				[14,16,17,20]
+			],
+			// 60-64
+			[
+				[9,10,11,12],
+				[11,13,14,15],
+				[14,15,17,18],
+				[17,18,20,22]
+			],
+			// 65-69
+			[
+				[12,13,14,15],
+				[14,15,17,18],
+				[17,18,20,21],
+				[20,22,23,25]
+			],
+			// 70-74
+			[
+				[15,16,18,20],
+				[19,20,22,24],
+				[23,25,28,30],
+				[28,31,34,36]
+			],
+			// 75-79
+			[
+				[19,22,25,29],
+				[23,26,29,33],
+				[27,30,34,38],
+				[31,35,39,44]
+			],
+			// 80-84
+			[
+				[25,30,35,40],
+				[28,33,38,44],
+				[31,36,42,48],
+				[34,40,46,53]
+			],
+			// 85-89
+			[
+				[32,39,46,55],
+				[34,41,48,57],
+				[35,43,51,59],
+				[37,45,53,61]
+			],
+		],
+	}
+};
+
 // Define matrices for each region
-const RISK_MATRICES: Record<Region, RiskMatrix> = {
+const HEARTS_RISK_MATRICES: Record<Region, RiskMatrix> = {
   southern: {
     male: [
       // 40-44
@@ -839,7 +1155,7 @@ function calculateHeartsScore(
   }
 
   // Get the risk matrix for the region
-  const riskMatrix = RISK_MATRICES[region];
+  const riskMatrix = HEARTS_RISK_MATRICES[region];
 
   // Convert cholesterol to mmol/L for the calculation
   const colesterolMmolL = convertMgDlToMmolL(colesterolTotal);
@@ -908,7 +1224,7 @@ function calculateHeartsScore(
   const isSmoker = tabaquismo === "S";
   const baseRisk =
     riskMatrix[genero === "M" ? "male" : "female"][ageGroupIndex][
-      isSmoker ? 1 : 0
+    isSmoker ? 1 : 0
     ][sbpIndex][cholIndex];
 
   // Determine risk level and color based on percentage
@@ -939,6 +1255,133 @@ function calculateHeartsScore(
   };
 }
 
+function calculateScore2(
+  edad: number,
+  genero: string,
+  presionSistolica: number,
+  colesterolNoHdl: number,
+  tabaquismo: string,
+): { score: number; riskLevel: string; color: string } {
+
+  const gender = GENDERS[genero];
+
+  // Get the risk matrix for the gender
+  const riskMatrix = SCORE2_RISK_MATRICES[gender];
+
+  // Convert cholesterol to mmol/L for the calculation
+  const colesterolMmolL = convertMgDlToMmolL(colesterolNoHdl);
+
+  // Age ranges and their corresponding matrix rows
+  const ageRanges = [
+    { min: 40, max: 44 },
+    { min: 45, max: 49 },
+    { min: 50, max: 54 },
+    { min: 55, max: 59 },
+    { min: 60, max: 64 },
+    { min: 65, max: 69 },
+    { min: 70, max: 74 },
+    { min: 75, max: 79 },
+    { min: 80, max: 84 },
+    { min: 85, max: 89 },
+  ];
+
+  // Find the age group index
+  const ageGroupIndex = ageRanges.findIndex(
+    (range) => edad >= range.min && edad <= range.max
+  );
+  if (ageGroupIndex === -1) {
+    // Age out of range, return maximum risk
+    return {
+      score: 30,
+      riskLevel: "Crítico",
+      color: "bg-red-900",
+    };
+  }
+
+  // Define SBP ranges
+  const sbpRanges: Range[] = [
+    { max: 119 },
+    { min: 120, max: 139 },
+    { min: 140, max: 159 },
+    { min: 160, max: 179 }
+  ];
+
+  // Find SBP range index
+  const sbpIndex = sbpRanges.findIndex((range) => {
+    if (!range.min && range.max) return presionSistolica < range.max;
+    if (range.min && !range.max) return presionSistolica >= range.min;
+    if (range.min && range.max)
+      return presionSistolica >= range.min && presionSistolica <= range.max;
+    return false;
+  });
+
+  // Define cholesterol ranges
+  const cholRanges: Range[] = [
+    { max: 3.9 },
+    { min: 4, max: 4.9 },
+    { min: 5, max: 5.9 },
+    { min: 6, max: 6.9 }
+  ];
+
+  // Find cholesterol range index
+  const cholIndex = cholRanges.findIndex((range) => {
+    if (!range.min && range.max) return colesterolMmolL < range.max;
+    if (range.min && !range.max) return colesterolMmolL >= range.min;
+    if (range.min && range.max)
+      return colesterolMmolL >= range.min && colesterolMmolL <= range.max;
+    return false;
+  });
+
+  // Get risk percentage from matrix
+  const isSmoker = tabaquismo === "S";
+  const baseRisk =
+    riskMatrix[isSmoker ? "smoking" : "nonSmoking"]?.[ageGroupIndex]?.[sbpIndex]?.[cholIndex] ?? 30;
+
+  // Determine risk level and color based on percentage
+  let riskLevel: string = "";
+  let color: string = "";
+
+  if (edad < 50) {
+    if (baseRisk < 2.5) {
+      riskLevel = "Bajo";
+      color = "bg-green-500";
+    } else if (baseRisk < 7.5) {
+      riskLevel = "Moderado";
+      color = "bg-yellow-500";
+    } else {
+      riskLevel = "Alto";
+      color = "bg-red-600";
+    }
+  } else if (edad >= 50 && edad <= 69) {
+    if (baseRisk < 5) {
+      riskLevel = "Bajo";
+      color = "bg-green-500";
+    } else if (baseRisk < 10) {
+      riskLevel = "Moderado";
+      color = "bg-yellow-500";
+    } else {
+      riskLevel = "Alto";
+      color = "bg-red-600";
+    }
+  } else {
+    if (baseRisk < 7.5) {
+      riskLevel = "Bajo";
+      color = "bg-green-500";
+    } else if (baseRisk < 15) {
+      riskLevel = "Moderado";
+      color = "bg-yellow-500";
+    } else {
+      riskLevel = "Alto";
+      color = "bg-red-600";
+    }
+  }
+  return {
+    score: baseRisk,
+    riskLevel,
+    color,
+  };
+}
+
 export async function POST(request: Request) {
   try {
     const data = await request.json();
@@ -949,6 +1392,7 @@ export async function POST(request: Request) {
       genero,
       presionSistolica,
       colesterolTotal,
+      colesterolNoHDL,
       hipertensionArterial,
       tabaquismo,
       imc,
@@ -1073,6 +1517,8 @@ export async function POST(request: Request) {
       pais // Pass país to the function
     );
 
+    const score2Result = calculateScore2(edad, genero, presionSistolica, colesterolNoHDL, tabaquismo);
+
     return NextResponse.json({
       harms2afScore,
       mtaiwanScore,
@@ -1081,6 +1527,9 @@ export async function POST(request: Request) {
       heartsScore: heartsResult.score,
       heartsRiskLevel: heartsResult.riskLevel,
       heartsRiskColor: heartsResult.color,
+      score2: score2Result.score,
+      score2RiskLevel: score2Result.riskLevel,
+      score2RiskColor: score2Result.color
     });
   } catch (error) {
     console.error("Error calculating scores:", error);

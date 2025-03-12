@@ -44,10 +44,14 @@ interface PatientData {
   heartsScore: number | null
   heartsRiskLevel: string | null
   heartsRiskColor: string | null
+  score2: number | null
+  score2RiskLevel: string | null
+  score2RiskColor: string | null
   createdAt: any
   doctorId: string
   doctorEmail: string
   colesterolTotal: number
+  colesterolNoHDL: number
 }
 
 interface ScoreDistribution {
@@ -212,7 +216,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Pacientes</CardTitle>
@@ -224,8 +228,7 @@ export default function DashboardPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Riesgo calculado HARMS<sub>2</sub>
+              <CardTitle className="text-sm font-medium">HARMS<sub>2</sub>
               </CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -243,7 +246,7 @@ export default function DashboardPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Riesgo calculado mTaiwan</CardTitle>
+              <CardTitle className="text-sm font-medium">mTaiwan</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -259,26 +262,15 @@ export default function DashboardPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Riesgo calculado HEARTS</CardTitle>
+              <CardTitle className="text-sm font-medium">HEARTS</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 {(() => {
-                  // Debug log
-                  console.log(
-                    "HEARTS Scores:",
-                    stats.allPatients.map((p) => p.heartsScore),
-                  )
-
-                  // Only include patients with valid heartsScore
                   const validPatients = stats.allPatients.filter(
                     (patient) => patient.heartsScore !== null && patient.heartsScore !== undefined,
                   )
-
-                  // Debug log
-                  console.log("Valid patients count:", validPatients.length)
-
                   if (validPatients.length === 0) {
                     return "0%"
                   }
@@ -286,8 +278,28 @@ export default function DashboardPage() {
                   const average =
                     validPatients.reduce((sum, patient) => sum + Number(patient.heartsScore), 0) / validPatients.length
 
-                  // Debug log
-                  console.log("Calculated average:", average)
+                  return `${Math.round(average)}%`
+                })()}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Score2 & Score2-OP</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {(() => {
+                  const validPatients = stats.allPatients.filter(
+                    (patient) => patient.score2 !== null && patient.score2 !== undefined,
+                  )
+                  if (validPatients.length === 0) {
+                    return "0%"
+                  }
+
+                  const average =
+                    validPatients.reduce((sum, patient) => sum + Number(patient.score2), 0) / validPatients.length
 
                   return `${Math.round(average)}%`
                 })()}
@@ -391,7 +403,9 @@ export default function DashboardPage() {
                         <th className="h-12 px-4 text-left align-middle font-medium">Edad</th>
                         <th className="h-12 px-4 text-left align-middle font-medium">P. Sistólica</th>
                         <th className="h-12 px-4 text-left align-middle font-medium">Colesterol total</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium">Colesterol no-HDL</th>
                         <th className="h-12 px-4 text-left align-middle font-medium">HEARTS</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium">Score2 & Score2-OP</th>
                         <th className="h-12 px-4 text-left align-middle font-medium">FRAIL</th>
                         <th className="h-12 px-4 text-left align-middle font-medium">
                           HARMS<sub>2</sub>-AF
@@ -408,10 +422,18 @@ export default function DashboardPage() {
                           <td className="p-4">{patient.edad}</td>
                           <td className="p-4">{patient.presionSistolica}</td>
                           <td className="p-4">{patient.colesterolTotal}</td>
+                          <td className="p-4">{patient.colesterolNoHDL}</td>
                           <td className={`p-4 ${patient.heartsRiskColor || "text-foreground"}`}>
                             <span className={patient.heartsRiskColor ? "text-white" : ""}>
                               {patient.heartsScore !== null
                                 ? `${patient.heartsScore}% (${patient.heartsRiskLevel})`
+                                : "N/A"}
+                            </span>
+                          </td>
+                          <td className={`p-4 ${patient.score2RiskColor || "text-foreground"}`}>
+                            <span className={patient.score2RiskColor ? "text-white" : ""}>
+                              {patient.heartsScore !== null
+                                ? `${patient.score2}% (${patient.score2RiskLevel})`
                                 : "N/A"}
                             </span>
                           </td>
@@ -478,3 +500,4 @@ export default function DashboardPage() {
     </div>
   )
 }
+

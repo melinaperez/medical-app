@@ -36,6 +36,7 @@ interface PatientData {
   genero: string
   edad: string
   colesterolTotal: string
+  colesterolNoHDL: string
   presionSistolica: string
   hipertensionArterial: string
   imc: string
@@ -71,6 +72,9 @@ interface ScoreResult {
   heartsScore: number
   heartsRiskLevel: string
   heartsRiskColor: string
+  score2: number
+  score2RiskLevel: string
+  score2RiskColor: string
 }
 
 const initialFormData: PatientData = {
@@ -80,6 +84,7 @@ const initialFormData: PatientData = {
   genero: "",
   edad: "",
   colesterolTotal: "",
+  colesterolNoHDL: "",
   presionSistolica: "",
   hipertensionArterial: "",
   imc: "",
@@ -111,6 +116,7 @@ const fieldLabels: Record<string, string> = {
   genero: "Género",
   edad: "Edad",
   colesterolTotal: "Colesterol total",
+  colesterolNoHDL: "Colesterol no-HDL",
   presionSistolica: "Presión Sistólica",
   hipertensionArterial: "Hipertensión Arterial",
   tabaquismo: "Tabaquismo",
@@ -190,10 +196,7 @@ export default function MedicalFormPage() {
   }, [user, router])
 
   // Show browser confirmation when trying to navigate away
-  useBeforeUnload(
-    !isSubmitted,
-    "¿Está seguro de que desea salir? Los cambios no guardados se perderán."
-  );
+  useBeforeUnload(!isSubmitted, "¿Está seguro de que desea salir? Los cambios no guardados se perderán.")
 
   if (isLoading) {
     return (
@@ -246,7 +249,8 @@ export default function MedicalFormPage() {
           ...data,
           edad: Number.parseInt(data.edad),
           presionSistolica: Number.parseInt(data.presionSistolica),
-          colesterolTotal: Number.parseInt(data.colesterolTotal), //Added colesterolTotal
+          colesterolTotal: Number.parseInt(data.colesterolTotal),
+          colesterolNoHDL: Number.parseInt(data.colesterolNoHDL),
         }),
       })
 
@@ -290,7 +294,8 @@ export default function MedicalFormPage() {
         ...formData,
         edad: Number.parseInt(formData.edad),
         presionSistolica: Number.parseInt(formData.presionSistolica),
-        colesterolTotal: Number.parseInt(formData.colesterolTotal), //Added colesterolTotal
+        colesterolTotal: Number.parseInt(formData.colesterolTotal),
+        colesterolNoHDL: Number.parseInt(formData.colesterolNoHDL),
         harms2afScore: calculatedScores.harms2afScore,
         mtaiwanScore: calculatedScores.mtaiwanScore,
         frailScore: calculatedScores.frailScore,
@@ -298,6 +303,9 @@ export default function MedicalFormPage() {
         heartsScore: calculatedScores.heartsScore,
         heartsRiskLevel: calculatedScores.heartsRiskLevel,
         heartsRiskColor: calculatedScores.heartsRiskColor,
+        score2: calculatedScores.score2,
+        score2RiskLevel: calculatedScores.score2RiskLevel,
+        score2RiskColor: calculatedScores.score2RiskColor,
         doctorId: user.uid,
         doctorEmail: user.email,
         createdAt: serverTimestamp(),
@@ -344,7 +352,7 @@ export default function MedicalFormPage() {
             {isSubmitted && <Button onClick={handleNewPatient}>Nuevo Paciente</Button>}
             <Button
               variant="outline"
-              onClick={() => isSubmitted ? router.push("/dashboard") : setShowExitConfirmation(true)}
+              onClick={() => (isSubmitted ? router.push("/dashboard") : setShowExitConfirmation(true))}
             >
               Volver al Dashboard
             </Button>
@@ -429,8 +437,8 @@ export default function MedicalFormPage() {
               </Select>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-3">
                 <Label className="block mb-2">Género</Label>
                 <ToggleGroup
                   type="single"
@@ -447,7 +455,7 @@ export default function MedicalFormPage() {
                   </ToggleGroupItem>
                 </ToggleGroup>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label htmlFor="edad">Edad</Label>
                 <Input
                   id="edad"
@@ -461,7 +469,10 @@ export default function MedicalFormPage() {
                   disabled={isSubmitted}
                 />
               </div>
-              <div className="space-y-2">
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-3">
                 <Label htmlFor="colesterolTotal">Colesterol total (mg/dL)</Label>
                 <Input
                   id="colesterolTotal"
@@ -474,10 +485,23 @@ export default function MedicalFormPage() {
                   disabled={isSubmitted}
                 />
               </div>
+              <div className="space-y-3">
+                <Label htmlFor="colesterolNoHDL">Colesterol no-HDL (mg/dL)</Label>
+                <Input
+                  id="colesterolNoHDL"
+                  name="colesterolNoHDL"
+                  type="number"
+                  min="0"
+                  value={formData.colesterolNoHDL}
+                  onChange={handleInputChange}
+                  required
+                  disabled={isSubmitted}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label htmlFor="presionSistolica">Presión Sistólica (mm Hg)</Label>
                 <Input
                   id="presionSistolica"
@@ -490,7 +514,7 @@ export default function MedicalFormPage() {
                   disabled={isSubmitted}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="block mb-2">Hipertensión Arterial</Label>
                 <ToggleGroup
                   type="single"
@@ -951,6 +975,11 @@ export default function MedicalFormPage() {
                 <p className="text-2xl font-bold">{scores.heartsScore}%</p>
                 <p className="text-lg">{scores.heartsRiskLevel}</p>
               </div>
+              <div className={`p-4 rounded-lg text-white ${scores.score2RiskColor}`}>
+                <h3 className="font-semibold mb-2">Riesgo calculado Score2 & Score2-OP:</h3>
+                <p className="text-2xl font-bold">{scores.score2}%</p>
+                <p className="text-lg">{scores.score2RiskLevel}</p>
+              </div>
               <div className="p-4 bg-primary/10 rounded-lg">
                 <h3 className="font-semibold mb-2">Escala FRAIL:</h3>
                 <p className="text-2xl font-bold">
@@ -967,11 +996,7 @@ export default function MedicalFormPage() {
                 <h3 className="font-semibold mb-2">Riesgo calculado mTaiwan-AF:</h3>
                 <p className="text-2xl font-bold">{scores.mtaiwanScore}</p>
               </div>
-              <Button
-                variant="outline"
-                onClick={() => router.push("/dashboard")}
-                className="w-full"
-              >
+              <Button variant="outline" onClick={() => router.push("/dashboard")} className="w-full">
                 Volver al Dashboard
               </Button>
             </div>
