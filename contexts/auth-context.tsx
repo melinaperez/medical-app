@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { createContext, useContext, useEffect, useState } from "react"
 import {
   GoogleAuthProvider,
@@ -14,7 +16,7 @@ import {
 } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { useRouter } from "next/navigation"
-import { isAdminEmail } from "@/lib/roles"
+import { isAdminEmail, isAdminEmailSync } from "@/lib/roles"
 
 type AuthContextType = {
   user: User | null
@@ -50,15 +52,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    // Verificar si auth está disponible (solo en el cliente)
+    if (typeof window === "undefined" || !auth) {
+      setLoading(false)
+      return
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user)
-      setIsAdmin(isAdminEmail(user?.email))
+
+      // Verificar si el usuario es admin
+      if (user?.email) {
+        // Primero usamos la versión síncrona para una respuesta rápida
+        setIsAdmin(isAdminEmailSync(user.email))
+
+        // Luego verificamos de forma asíncrona y actualizamos si es necesario
+        const adminStatus = await isAdminEmail(user.email)
+        setIsAdmin(adminStatus)
+      } else {
+        setIsAdmin(false)
+      }
+
       setLoading(false)
     })
     return () => unsubscribe()
   }, [])
 
   function signInWithGoogle() {
+    if (!auth) {
+      setError("Firebase Auth no está disponible")
+      return
+    }
+
     const provider = new GoogleAuthProvider()
     provider.setCustomParameters({
       prompt: "select_account",
@@ -85,6 +110,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signInWithEmail(email: string, password: string) {
+    if (!auth) {
+      setError("Firebase Auth no está disponible")
+      return
+    }
+
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
 
@@ -110,6 +140,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signUpWithEmail(email: string, password: string) {
+    if (!auth) {
+      setError("Firebase Auth no está disponible")
+      return
+    }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password)
 
@@ -137,8 +172,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function resendVerificationEmail() {
-    if (!user) {
-      setError("No hay usuario activo")
+    if (!auth || !user) {
+      setError("No hay usuario activo o Firebase Auth no está disponible")
       return
     }
 
@@ -151,6 +186,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function resetPassword(email: string) {
+    if (!auth) {
+      setError("Firebase Auth no está disponible")
+      return
+    }
+
     try {
       await sendPasswordResetEmail(auth, email)
       setError("Te hemos enviado un email para restablecer tu contraseña. Por favor, revisa tu bandeja de entrada.")
@@ -169,6 +209,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   function signOut() {
+    if (!auth) {
+      router.push("/login")
+      return
+    }
+
     firebaseSignOut(auth)
       .then(() => {
         router.push("/login")
@@ -201,4 +246,3 @@ export function useAuth() {
   }
   return context
 }
-

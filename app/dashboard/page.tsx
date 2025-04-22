@@ -7,7 +7,8 @@ import { db } from "@/lib/firebase"
 import { collection, query, getDocs, where } from "firebase/firestore"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Users, UserPlus, Activity, ChevronLeft, ChevronRight } from "lucide-react"
+// Add import for admin dashboard link
+import { Users, UserPlus, Activity, ChevronLeft, ChevronRight, LayoutDashboard } from "lucide-react"
 import {
   PieChart,
   Pie,
@@ -22,6 +23,7 @@ import {
   Legend,
 } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CountryFlag } from "@/components/country-flag"
 
 interface PatientData {
   nombre: string
@@ -52,6 +54,7 @@ interface PatientData {
   doctorEmail: string
   colesterolTotal: number
   colesterolNoHDL: number
+  pais: string
 }
 
 interface ScoreDistribution {
@@ -79,6 +82,35 @@ const initialStats: DashboardStats = {
 }
 
 const ITEMS_PER_PAGE_OPTIONS = [5, 10, 20, 50]
+
+const countryNames: { [key: string]: string } = {
+  AR: "Argentina",
+  BO: "Bolivia",
+  BR: "Brasil",
+  CL: "Chile",
+  CO: "Colombia",
+  EC: "Ecuador",
+  GY: "Guyana",
+  PY: "Paraguay",
+  PE: "Perú",
+  SR: "Surinam",
+  UY: "Uruguay",
+  VE: "Venezuela",
+  US: "Estados Unidos",
+  CA: "Canadá",
+  MX: "México",
+  ES: "España",
+  PT: "Portugal",
+  GB: "Reino Unido",
+  FR: "Francia",
+  DE: "Alemania",
+  IT: "Italia",
+  CN: "China",
+  JP: "Japón",
+  KR: "Corea del Sur",
+  AU: "Australia",
+  NZ: "Nueva Zelanda",
+}
 
 export default function DashboardPage() {
   const { user, signOut, isAdmin } = useAuth()
@@ -205,7 +237,14 @@ export default function DashboardPage() {
               {isAdmin && <span className="ml-2 text-blue-600">(Administrador)</span>}
             </p>
           </div>
+          {/* Update the buttons section in the dashboard header */}
           <div className="flex gap-2">
+            {isAdmin && (
+              <Button onClick={() => router.push("/admin/dashboard")} className="flex items-center gap-2">
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard Admin
+              </Button>
+            )}
             <Button onClick={() => router.push("/medical-form")} className="flex items-center gap-2">
               <UserPlus className="h-4 w-4" />
               Nuevo Paciente
@@ -228,7 +267,8 @@ export default function DashboardPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">HARMS<sub>2</sub>
+              <CardTitle className="text-sm font-medium">
+                HARMS<sub>2</sub>
               </CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -412,6 +452,7 @@ export default function DashboardPage() {
                         </th>
                         <th className="h-12 px-4 text-left align-middle font-medium">mTaiwan-AF</th>
                         {isAdmin && <th className="h-12 px-4 text-left align-middle font-medium">Médico</th>}
+                        <th className="h-12 px-4 text-left align-middle font-medium">País</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -432,9 +473,7 @@ export default function DashboardPage() {
                           </td>
                           <td className={`p-4 ${patient.score2RiskColor || "text-foreground"}`}>
                             <span className={patient.score2RiskColor ? "text-white" : ""}>
-                              {patient.heartsScore !== null
-                                ? `${patient.score2}% (${patient.score2RiskLevel})`
-                                : "N/A"}
+                              {patient.heartsScore !== null ? `${patient.score2}% (${patient.score2RiskLevel})` : "N/A"}
                             </span>
                           </td>
                           <td className="p-4">
@@ -443,6 +482,12 @@ export default function DashboardPage() {
                           <td className="p-4">{patient.harms2afScore}</td>
                           <td className="p-4">{patient.mtaiwanScore}</td>
                           {isAdmin && <td className="p-4">{patient.doctorEmail}</td>}
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <CountryFlag countryCode={patient.pais} size="sm" />
+                              <span>{countryNames[patient.pais] || patient.pais}</span>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -500,4 +545,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-
