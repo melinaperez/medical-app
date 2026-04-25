@@ -1202,12 +1202,12 @@ function calculateHeartsScore(
     return false;
   });
 
-  // Define cholesterol ranges
+  // Define cholesterol ranges (continuous, no gaps)
   const cholRanges: Range[] = [
     { max: 4 },
-    { min: 4, max: 4.9 },
-    { min: 5, max: 5.9 },
-    { min: 6, max: 6.9 },
+    { min: 4, max: 5 },
+    { min: 5, max: 6 },
+    { min: 6, max: 7 },
     { min: 7 },
   ];
 
@@ -1216,16 +1216,16 @@ function calculateHeartsScore(
     if (!range.min && range.max) return colesterolMmolL < range.max;
     if (range.min && !range.max) return colesterolMmolL >= range.min;
     if (range.min && range.max)
-      return colesterolMmolL >= range.min && colesterolMmolL <= range.max;
+      return colesterolMmolL >= range.min && colesterolMmolL < range.max;
     return false;
   });
 
-  // Get risk percentage from matrix
+  // Get risk percentage from matrix (defensive against any out-of-range index)
   const isSmoker = tabaquismo === "S";
   const baseRisk =
-    riskMatrix[genero === "M" ? "male" : "female"][ageGroupIndex][
-    isSmoker ? 1 : 0
-    ][sbpIndex][cholIndex];
+    riskMatrix[genero === "M" ? "male" : "female"]?.[ageGroupIndex]?.[
+      isSmoker ? 1 : 0
+    ]?.[sbpIndex]?.[cholIndex] ?? 30;
 
   // Determine risk level and color based on percentage
   let riskLevel: string;
