@@ -25,7 +25,7 @@
     "date-fns": "^2.30.0",
     "firebase": "^11.2.0",
     "lucide-react": "^0.474.0",
-    "next": "^15.1.6",
+    "next": "15.1.11",
     "react": "^18",
     "react-dom": "^18",
     "react-simple-maps": "^3.0.0",
